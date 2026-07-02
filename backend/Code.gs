@@ -110,9 +110,10 @@ function num_(v) {
 
 /**
  * GET params:
- *   action=status                → última lectura
- *   action=history&hours=24      → histórico de las últimas N horas (def. 24, máx. 168)
+ *   action=status                → última lectura + última activación de bomba
+ *   action=history&hours=24      → histórico de las últimas N horas (def. 24, máx. 2232 ≈ 3 meses)
  *   callback=fn                  → envuelve la respuesta en JSONP (fallback CORS)
+ * En rangos largos el histórico se devuelve agregado (~480 puntos máx.).
  */
 function doGet(e) {
   var p = (e && e.parameter) || {};
@@ -121,10 +122,10 @@ function doGet(e) {
 
   try {
     if (action === 'history') {
-      var hours = Math.min(Math.max(Number(p.hours) || 24, 1), 168);
+      var hours = Math.min(Math.max(Number(p.hours) || 24, 1), 2232);
       payload = { ok: true, rows: readHistory_(hours) };
     } else {
-      payload = { ok: true, row: readLast_() };
+      payload = { ok: true, row: readLast_(), ultima_bomba: lastPumpRun_() };
     }
   } catch (err) {
     payload = { ok: false, error: String(err) };
@@ -152,8 +153,9 @@ function readHistory_(hours) {
   if (last < 2) return [];
 
   var cutoff = Date.now() - hours * 3600 * 1000;
-  // Leer como mucho las últimas 2000 filas para no agotar el tiempo de ejecución
-  var maxRows = 2000;
+  // ~60 filas/hora (1/min) más margen para envíos por eventos; tope absoluto
+  // para no agotar el tiempo de ejecución en rangos de meses
+  var maxRows = Math.min(Math.ceil(hours * 70), 160000);
   var start = Math.max(2, last - maxRows + 1);
   var values = sheet.getRange(start, 1, last - start + 1, HEADERS.length).getValues();
 
@@ -167,7 +169,93 @@ function readHistory_(hours) {
       out.push(rowToObj_(values[i]));
     }
   }
+  return downsample_(out, 480);
+}
+
+/**
+ * Agrega el histórico a `target` puntos como máximo: media de los valores
+ * analógicos, último valor de los niveles, y bomba=1 si estuvo activa en
+ * algún momento del grupo (para que las activaciones no desaparezcan al
+ * agregar). La alerta conserva la primera no vacía del grupo.
+ */
+function downsample_(rows, target) {
+  if (rows.length <= target) return rows;
+  var size = Math.ceil(rows.length / target);
+  var niveles = ['nivel_ppal_alto', 'nivel_ppal_bajo',
+                 'nivel_aux_alto', 'nivel_aux_medio', 'nivel_aux_bajo'];
+  var out = [];
+
+  for (var i = 0; i < rows.length; i += size) {
+    var chunk = rows.slice(i, i + size);
+    var agg = {
+      timestamp: chunk[Math.floor(chunk.length / 2)].timestamp,
+      temp_c: avg_(chunk, 'temp_c'),
+      tds_ppm: avg_(chunk, 'tds_ppm'),
+      ec_us: avg_(chunk, 'ec_us'),
+      rssi: avg_(chunk, 'rssi'),
+      bomba: 0,
+      alerta: ''
+    };
+    var ultimo = chunk[chunk.length - 1];
+    for (var k = 0; k < niveles.length; k++) agg[niveles[k]] = ultimo[niveles[k]];
+    for (var j = 0; j < chunk.length; j++) {
+      if (Number(chunk[j].bomba) === 1) agg.bomba = 1;
+      if (!agg.alerta && chunk[j].alerta) agg.alerta = chunk[j].alerta;
+    }
+    out.push(agg);
+  }
   return out;
+}
+
+function avg_(rows, key) {
+  var sum = 0, n = 0;
+  for (var i = 0; i < rows.length; i++) {
+    var v = Number(rows[i][key]);
+    if (rows[i][key] !== '' && rows[i][key] !== null && isFinite(v)) { sum += v; n++; }
+  }
+  return n ? Math.round((sum / n) * 10) / 10 : '';
+}
+
+/**
+ * Última activación de la bomba: busca hacia atrás (máx. 5000 filas) la última
+ * racha de bomba=1. El firmware envía un POST inmediato al arrancar y al parar,
+ * así que la primera fila de la racha marca el arranque y la fila siguiente a
+ * la racha marca la parada con precisión de segundos.
+ */
+function lastPumpRun_() {
+  var sheet = getSheet_();
+  var last = sheet.getLastRow();
+  if (last < 2) return null;
+
+  var n = Math.min(5000, last - 1);
+  var values = sheet.getRange(last - n + 1, 1, n, HEADERS.length).getValues();
+  var BOMBA = 9; // índice de la columna bomba en HEADERS
+
+  var idx = -1;
+  for (var i = values.length - 1; i >= 0; i--) {
+    if (Number(values[i][BOMBA]) === 1) { idx = i; break; }
+  }
+  if (idx === -1) return null;
+
+  var startIdx = idx;
+  while (startIdx > 0 && Number(values[startIdx - 1][BOMBA]) === 1) startIdx--;
+
+  var inicio = toMs_(values[startIdx][0]);
+  if (inicio === null) return null;
+  var enMarcha = (idx === values.length - 1);
+  var fin = enMarcha ? null : toMs_(values[idx + 1][0]);
+
+  return {
+    inicio: new Date(inicio).toISOString(),
+    fin: (fin === null) ? null : new Date(fin).toISOString(),
+    duracion_s: Math.max(0, Math.round(((fin === null ? Date.now() : fin) - inicio) / 1000)),
+    en_marcha: enMarcha
+  };
+}
+
+function toMs_(v) {
+  var t = (v instanceof Date) ? v.getTime() : new Date(v).getTime();
+  return isFinite(t) ? t : null;
 }
 
 function rowToObj_(values) {

@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Monitor hidroponía</title>
+<link rel="icon" href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 3C12 3 6 10 6 14a6 6 0 0 0 12 0C18 10 12 3 12 3Z" fill="%232a78d6"/></svg>'>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <style>
   :root {
@@ -57,8 +58,16 @@
     display: flex; flex-wrap: wrap; align-items: center; gap: 12px;
     margin-bottom: 16px;
   }
-  header h1 { font-size: 1.25rem; font-weight: 650; margin-right: auto; }
+  header h1 { font-size: 1.25rem; font-weight: 650; margin-right: auto; display: flex; align-items: center; gap: 8px; }
   .updated { color: var(--text-muted); font-size: 0.8rem; }
+
+  /* Iconos propios: trazo fino, sin relleno, heredan el color del texto */
+  .ic {
+    width: 16px; height: 16px; flex-shrink: 0;
+    stroke: currentColor; fill: none;
+    stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round;
+  }
+  h1 .ic { width: 22px; height: 22px; stroke: var(--water); }
 
   .pill {
     display: inline-flex; align-items: center; gap: 6px;
@@ -79,7 +88,8 @@
     font-weight: 600; font-size: 0.9rem;
   }
   #alert-banner.visible { display: flex; }
-  #alert-banner .icon { font-size: 1.1rem; }
+  #alert-banner .ic { width: 20px; height: 20px; stroke: var(--st-critical); }
+  .config-warning .ic { width: 18px; height: 18px; stroke: var(--st-warning); vertical-align: -4px; margin-right: 6px; }
 
   .grid {
     display: grid; gap: 16px;
@@ -156,6 +166,11 @@
   .pump-state .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--text-muted); }
   .pump-state.on .dot { background: var(--st-good); animation: pulse 1.2s ease infinite; }
   @keyframes pulse { 50% { opacity: 0.35; } }
+  .pump-last { font-size: 0.75rem; color: var(--text-muted); margin-top: 4px; line-height: 1.4; }
+
+  #v-rssi { display: flex; align-items: center; gap: 8px; }
+  .bars { width: 26px; height: 20px; fill: var(--text-primary); }
+  .sig-txt { font-size: 1.05rem; font-weight: 650; }
 
   /* ------------------------------------------------------------ gráficos */
   .range-row { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
@@ -165,6 +180,8 @@
     border: 1px solid var(--border); background: var(--surface-1); color: var(--text-secondary);
   }
   .range-row button.active { color: var(--text-primary); border-color: var(--text-primary); }
+  .range-note { font-size: 0.75rem; color: var(--text-muted); align-self: center; margin-left: auto; display: inline-flex; align-items: center; gap: 6px; }
+  .range-note .swatch { width: 10px; height: 10px; border-radius: 2px; background: var(--water); opacity: 0.3; }
   .chart-card h2 span { color: var(--text-muted); font-weight: 400; text-transform: none; letter-spacing: 0; }
   .chart-box { position: relative; height: 220px; }
 
@@ -189,17 +206,17 @@
 <body>
 
 <header>
-  <h1>🌱 Monitor hidroponía</h1>
+  <h1><svg class="ic" viewBox="0 0 24 24"><path d="M12 3C12 3 6 10 6 14a6 6 0 0 0 12 0C18 10 12 3 12 3Z"/></svg>Monitor hidroponía</h1>
   <span class="updated" id="updated">—</span>
   <span class="pill" id="status-pill"><span class="dot"></span><span id="status-text">Cargando…</span></span>
 </header>
 
 <div class="config-warning" id="config-warning">
-  ⚙️ Falta configurar la URL del backend: edita la constante <code>API_URL</code> al principio del script de esta página.
+  <svg class="ic" viewBox="0 0 24 24"><path d="M12 4 21 19H3L12 4Z"/><path d="M12 10v4.5"/><circle cx="12" cy="16.8" r="0.5" fill="currentColor" stroke="none"/></svg>Falta configurar la URL del backend: edita la constante <code>API_URL</code> al principio del script de esta página.
 </div>
 
 <div id="alert-banner" role="alert">
-  <span class="icon">⚠️</span><span id="alert-text"></span>
+  <svg class="ic" viewBox="0 0 24 24"><path d="M12 4 21 19H3L12 4Z"/><path d="M12 10v4.5"/><circle cx="12" cy="16.8" r="0.5" fill="currentColor" stroke="none"/></svg><span id="alert-text"></span>
 </div>
 
 <div class="grid">
@@ -250,12 +267,13 @@
     <h2>Lecturas</h2>
     <div class="readings">
       <div class="stat">
-        <div class="label">🌡️ Temperatura agua</div>
+        <div class="label"><svg class="ic" viewBox="0 0 24 24"><path d="M10 13.5V5a2 2 0 0 1 4 0v8.5a4.5 4.5 0 1 1-4 0Z"/><path d="M12 12v5"/></svg>Temperatura agua</div>
         <div class="value" id="v-temp">—<span class="unit"> °C</span></div>
       </div>
       <div class="stat">
         <div class="label">
-          <span id="ec-label">⚡ EC</span>
+          <svg class="ic" viewBox="0 0 24 24"><path d="M13 3 6 14h5l-1 7 7-11h-5l1-7Z"/></svg>
+          <span id="ec-label">EC</span>
           <span class="toggle">
             <button id="btn-ec" class="active">EC</button>
             <button id="btn-tds">TDS</button>
@@ -264,12 +282,13 @@
         <div class="value" id="v-ec">—<span class="unit" id="u-ec"> µS/cm</span></div>
       </div>
       <div class="stat">
-        <div class="label">🚰 Bomba</div>
+        <div class="label"><svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M10 8.5l5.5 3.5-5.5 3.5Z"/></svg>Bomba</div>
         <div class="pump-state" id="pump"><span class="dot"></span><span id="pump-text">—</span></div>
+        <div class="pump-last" id="pump-last">—</div>
       </div>
       <div class="stat">
-        <div class="label">📶 WiFi (RSSI)</div>
-        <div class="value" id="v-rssi">—<span class="unit"> dBm</span></div>
+        <div class="label"><svg class="ic" viewBox="0 0 24 24"><path d="M4 9.5a13 13 0 0 1 16 0"/><path d="M7 13a8.5 8.5 0 0 1 10 0"/><path d="M10 16.5a4 4 0 0 1 4 0"/><circle cx="12" cy="19.2" r="0.6" fill="currentColor" stroke="none"/></svg>Señal WiFi</div>
+        <div class="value" id="v-rssi"><span class="unit">—</span></div>
       </div>
     </div>
   </div>
@@ -280,6 +299,10 @@
   <button data-hours="24" class="active">24 h</button>
   <button data-hours="48">48 h</button>
   <button data-hours="168">7 días</button>
+  <button data-hours="360">15 días</button>
+  <button data-hours="720">1 mes</button>
+  <button data-hours="2160">3 meses</button>
+  <span class="range-note"><span class="swatch"></span>bomba en marcha</span>
 </div>
 
 <div class="grid">
@@ -355,7 +378,7 @@ function jsonp(url) {
   return new Promise((resolve, reject) => {
     const cb = 'jsonp_cb_' + Math.floor(Math.random() * 1e9);
     const script = document.createElement('script');
-    const timer = setTimeout(() => { cleanup(); reject(new Error('JSONP timeout')); }, 15000);
+    const timer = setTimeout(() => { cleanup(); reject(new Error('JSONP timeout')); }, 60000);
     function cleanup() {
       clearTimeout(timer);
       delete window[cb];
@@ -385,9 +408,9 @@ function renderStatus(row) {
   document.getElementById('updated').textContent =
     'Última lectura: ' + ts.toLocaleString('es-ES', { dateStyle: 'short', timeStyle: 'short' });
 
-  if (ageMin > OFFLINE_MIN)    setPill('offline', '🔴 Sin conexión');
-  else if (ageMin > STALE_MIN) setPill('stale',   '🟡 Desactualizado');
-  else                         setPill('online',  '🟢 En línea');
+  if (ageMin > OFFLINE_MIN)    setPill('offline', 'Sin conexión');
+  else if (ageMin > STALE_MIN) setPill('stale',   'Desactualizado');
+  else                         setPill('online',  'En línea');
 
   // Banner de alertas (icono + texto, nunca solo color)
   const banner = document.getElementById('alert-banner');
@@ -414,7 +437,7 @@ function renderTanks(row) {
   if (pAlto && pBajo)      { pPct = 96; pLabel = 'Lleno';  pDesc = 'Por encima del nivel alto'; }
   else if (pBajo)          { pPct = 55; pLabel = 'Medio';  pDesc = 'Entre nivel bajo y alto'; }
   else if (!pAlto)         { pPct = 15; pLabel = 'Bajo';   pDesc = 'Por debajo del nivel de arranque'; }
-  if (pAlto && !pBajo)     { pPct = 55; pLabel = 'Sensor?'; pDesc = '⚠️ Lectura incoherente (alto sin bajo)'; }
+  if (pAlto && !pBajo)     { pPct = 55; pLabel = 'Sensor?'; pDesc = 'Lectura incoherente (alto sin bajo)'; }
   document.getElementById('water-ppal').style.height = pPct + '%';
   document.getElementById('label-ppal').textContent = pLabel;
   document.getElementById('desc-ppal').textContent = pDesc;
@@ -428,9 +451,9 @@ function renderTanks(row) {
   if (aAlto)       { aPct = 96; aLabel = 'Lleno';  aDesc = 'Por encima del nivel medio-alto'; }
   else if (aMedio) { aPct = 66; aLabel = 'Medio';  aDesc = 'Entre nivel medio y medio-alto'; }
   else if (aBajo)  { aPct = 33; aLabel = 'Bajo';   aDesc = 'Reserva baja: rellenar pronto'; }
-  else             { aPct = 4;  aLabel = 'Vacío';  aDesc = '⚠️ Bomba bloqueada (anti marcha en seco)'; }
+  else             { aPct = 4;  aLabel = 'Vacío';  aDesc = 'Bomba bloqueada (anti marcha en seco)'; }
   if ((aAlto && !aMedio) || (aMedio && !aBajo)) {
-    aDesc = '⚠️ Lectura incoherente de sensores';
+    aDesc = 'Lectura incoherente de sensores';
   }
   document.getElementById('water-aux').style.height = aPct + '%';
   document.getElementById('label-aux').textContent = aLabel;
@@ -452,15 +475,60 @@ function renderReadings(row) {
   const unit = showTDS ? ' ppm' : ' µS/cm';
   document.getElementById('v-ec').innerHTML =
     (isFinite(val) ? Math.round(val) : '—') + '<span class="unit">' + unit + '</span>';
-  document.getElementById('ec-label').textContent = showTDS ? '⚡ TDS' : '⚡ EC';
+  document.getElementById('ec-label').textContent = showTDS ? 'TDS' : 'EC';
 
   const pumpOn = Number(row.bomba) === 1;
   document.getElementById('pump').className = 'pump-state' + (pumpOn ? ' on' : '');
   document.getElementById('pump-text').textContent = pumpOn ? 'En marcha' : 'Parada';
 
-  const rssi = numOr(row.rssi);
-  document.getElementById('v-rssi').innerHTML =
-    (isFinite(rssi) ? rssi : '—') + '<span class="unit"> dBm</span>';
+  renderSignal(numOr(row.rssi));
+}
+
+// Barras de señal a partir del RSSI (dBm exacto en el tooltip)
+function renderSignal(rssi) {
+  const el = document.getElementById('v-rssi');
+  if (!isFinite(rssi)) {
+    el.innerHTML = '<span class="unit">—</span>';
+    el.title = '';
+    return;
+  }
+  let n, txt;
+  if (rssi >= -55)      { n = 4; txt = 'Excelente'; }
+  else if (rssi >= -65) { n = 3; txt = 'Buena'; }
+  else if (rssi >= -75) { n = 2; txt = 'Regular'; }
+  else if (rssi >= -85) { n = 1; txt = 'Débil'; }
+  else                  { n = 0; txt = 'Muy débil'; }
+
+  let bars = '';
+  for (let i = 0; i < 4; i++) {
+    const h = 6 + i * 4;
+    bars += '<rect x="' + (2 + i * 5.5) + '" y="' + (19 - h) + '" width="3.5" height="' + h +
+            '" rx="1" opacity="' + (i < n ? 1 : 0.25) + '"/>';
+  }
+  el.innerHTML = '<svg class="bars" viewBox="0 0 24 20" aria-hidden="true">' + bars + '</svg>' +
+                 '<span class="sig-txt">' + txt + '</span>';
+  el.title = rssi + ' dBm';
+}
+
+// Última activación de la bomba (calculada por el backend a partir del histórico)
+function renderPumpLast(info) {
+  const el = document.getElementById('pump-last');
+  if (!info) { el.textContent = 'Sin activaciones registradas'; return; }
+  const ini = new Date(info.inicio);
+  const hora = ini.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+  const fecha = ini.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit' }) + ' ' + hora;
+  el.textContent = info.en_marcha
+    ? 'En marcha desde las ' + hora + ' (' + fmtDur(info.duracion_s) + ')'
+    : 'Última: ' + fecha + ' · duró ' + fmtDur(info.duracion_s);
+}
+
+function fmtDur(s) {
+  if (!isFinite(s) || s < 0) return '—';
+  if (s < 90) return Math.round(s) + ' s';
+  const m = Math.floor(s / 60), sec = Math.round(s % 60);
+  if (m < 90) return m + ' min' + (sec ? ' ' + sec + ' s' : '');
+  const h = Math.floor(m / 60);
+  return h + ' h ' + (m % 60) + ' min';
 }
 
 // ------------------------------------------------------------------ gráficos
@@ -468,6 +536,34 @@ function renderReadings(row) {
 function cssVar(name) {
   return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
 }
+
+// Franjas verticales en los tramos del histórico con la bomba en marcha
+let pumpFlags = [];
+const pumpBands = {
+  id: 'pumpBands',
+  beforeDatasetsDraw(chart) {
+    if (!pumpFlags.length) return;
+    const { ctx, chartArea, scales } = chart;
+    const x = scales.x;
+    if (!x || !chartArea) return;
+    const half = pumpFlags.length > 1
+      ? Math.abs(x.getPixelForValue(1) - x.getPixelForValue(0)) / 2
+      : 4;
+    ctx.save();
+    ctx.fillStyle = cssVar('--water') + '4d'; // ~30 % de opacidad
+    let i = 0;
+    while (i < pumpFlags.length) {
+      if (!pumpFlags[i]) { i++; continue; }
+      let j = i;
+      while (j + 1 < pumpFlags.length && pumpFlags[j + 1]) j++;
+      const x1 = Math.max(x.getPixelForValue(i) - half, chartArea.left);
+      const x2 = Math.min(x.getPixelForValue(j) + half, chartArea.right);
+      ctx.fillRect(x1, chartArea.top, Math.max(x2 - x1, 2), chartArea.bottom - chartArea.top);
+      i = j + 1;
+    }
+    ctx.restore();
+  }
+};
 
 function baseOptions(unit) {
   return {
@@ -485,7 +581,8 @@ function baseOptions(unit) {
         borderWidth: 1,
         displayColors: false,
         callbacks: {
-          label: ctx => ctx.formattedValue + ' ' + unit
+          label: ctx => ctx.formattedValue + ' ' + unit,
+          afterBody: items => (items.length && pumpFlags[items[0].dataIndex]) ? 'Bomba en marcha' : ''
         }
       }
     },
@@ -516,7 +613,8 @@ function makeLine(canvasId, color, unit) {
       pointHoverBackgroundColor: color,
       tension: 0.25
     }]},
-    options: baseOptions(unit)
+    options: baseOptions(unit),
+    plugins: [pumpBands]
   });
 }
 
@@ -531,6 +629,7 @@ function fmtTime(iso, longRange) {
 function renderCharts() {
   const longRange = historyHours > 24;
   const labels = historyRows.map(r => fmtTime(r.timestamp, longRange));
+  pumpFlags = historyRows.map(r => Number(r.bomba) === 1);
 
   document.getElementById('chart-ec-title').childNodes[0].nodeValue = showTDS ? 'TDS ' : 'EC ';
   document.getElementById('chart-ec-unit').textContent = showTDS ? '(ppm)' : '(µS/cm)';
@@ -571,7 +670,7 @@ function fmt(v, dec) {
 async function refreshStatus() {
   try {
     const res = await apiFetch('action=status');
-    if (res && res.ok) renderStatus(res.row);
+    if (res && res.ok) { renderStatus(res.row); renderPumpLast(res.ultima_bomba); }
     else setPill('offline', 'Error backend');
   } catch (e) {
     setPill('offline', 'Sin respuesta');

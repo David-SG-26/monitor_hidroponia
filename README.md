@@ -56,9 +56,12 @@ GitHub Pages (docs/) ──GET── estado + histórico (JSON / JSONP)
 3. Abre `https://<usuario>.github.io/monitor_hidroponia/`.
 
 Características: vasijas animadas de ambos depósitos, temperatura, **EC con
-toggle a TDS**, estado de bomba, banner de alertas, gráficos históricos
-(6 h / 24 h / 48 h / 7 días), tabla de datos y estado
-🟢 en línea / 🟡 desactualizado (>5 min) / 🔴 sin conexión (>15 min).
+toggle a TDS**, estado de bomba con **última activación y duración**, banner
+de alertas, gráficos históricos (de 6 h a 3 meses; en rangos largos el backend
+agrega las muestras a ~480 puntos) con **franjas azules en los tramos con la
+bomba en marcha**, indicador de señal WiFi por barras, tabla de datos e
+iconografía SVG propia. Estado de conexión calculado por la antigüedad de la
+última lectura: en línea / desactualizado (>5 min) / sin conexión (>15 min).
 
 GitHub Pages es estático: la página solo **lee** del backend; los POST del
 ESP32 van siempre al Apps Script.
