@@ -159,8 +159,11 @@ function readHistory_(hours) {
 
   var out = [];
   for (var i = 0; i < values.length; i++) {
+    // La celda puede llegar como Date o como texto según cómo se escribiera:
+    // aceptar ambos en vez de exigir instanceof Date
     var t = values[i][0];
-    if (t instanceof Date && t.getTime() >= cutoff) {
+    var time = (t instanceof Date) ? t.getTime() : new Date(t).getTime();
+    if (isFinite(time) && time >= cutoff) {
       out.push(rowToObj_(values[i]));
     }
   }
