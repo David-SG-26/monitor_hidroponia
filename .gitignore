@@ -1,0 +1,13 @@
+# PlatformIO
+firmware/.pio/
+firmware/.vscode/
+
+# Credenciales locales (si se separa la config real del ejemplo)
+firmware/src/config.local.h
+
+# Sistema
+.DS_Store
+
+# Herramientas locales
+.tokensave/
+.claude/

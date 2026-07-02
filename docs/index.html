@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Monitor hidroponía</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+  :root {
+    --surface-1: #fcfcfb;
+    --page: #f9f9f7;
+    --text-primary: #0b0b0b;
+    --text-secondary: #52514e;
+    --text-muted: #898781;
+    --grid: #e1e0d9;
+    --baseline: #c3c2b7;
+    --border: rgba(11, 11, 11, 0.10);
+    --series-ec: #2a78d6;      /* categorical slot 1: blue  */
+    --series-temp: #008300;    /* categorical slot 4: green */
+    --water: #2a78d6;
+    --water-deep: #1c5cab;
+    --st-good: #0ca30c;
+    --st-warning: #fab219;
+    --st-serious: #ec835a;
+    --st-critical: #d03b3b;
+    --good-text: #006300;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --surface-1: #1a1a19;
+      --page: #0d0d0d;
+      --text-primary: #ffffff;
+      --text-secondary: #c3c2b7;
+      --text-muted: #898781;
+      --grid: #2c2c2a;
+      --baseline: #383835;
+      --border: rgba(255, 255, 255, 0.10);
+      --series-ec: #3987e5;
+      --series-temp: #008300;
+      --water: #3987e5;
+      --water-deep: #256abf;
+      --good-text: #0ca30c;
+    }
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    background: var(--page);
+    color: var(--text-primary);
+    padding: 16px;
+    max-width: 1080px;
+    margin: 0 auto;
+  }
+
+  header {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 12px;
+    margin-bottom: 16px;
+  }
+  header h1 { font-size: 1.25rem; font-weight: 650; margin-right: auto; }
+  .updated { color: var(--text-muted); font-size: 0.8rem; }
+
+  .pill {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 0.8rem; font-weight: 600;
+    padding: 4px 12px; border-radius: 999px;
+    border: 1px solid var(--border); background: var(--surface-1);
+  }
+  .pill .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--text-muted); }
+  .pill.online .dot { background: var(--st-good); }
+  .pill.stale .dot { background: var(--st-warning); }
+  .pill.offline .dot { background: var(--st-critical); }
+
+  #alert-banner {
+    display: none; align-items: center; gap: 10px;
+    padding: 12px 16px; border-radius: 10px; margin-bottom: 16px;
+    border: 1px solid var(--border); background: var(--surface-1);
+    border-left: 4px solid var(--st-critical);
+    font-weight: 600; font-size: 0.9rem;
+  }
+  #alert-banner.visible { display: flex; }
+  #alert-banner .icon { font-size: 1.1rem; }
+
+  .grid {
+    display: grid; gap: 16px;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    margin-bottom: 16px;
+  }
+  .card {
+    background: var(--surface-1);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+  }
+  .card h2 {
+    font-size: 0.8rem; font-weight: 600; color: var(--text-secondary);
+    text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 12px;
+  }
+
+  /* ------------------------------------------------------------- vasijas */
+  .tank-wrap { display: flex; gap: 16px; align-items: flex-end; }
+  .vessel {
+    position: relative; width: 110px; height: 150px;
+    border: 2px solid var(--baseline); border-top-width: 1px;
+    border-radius: 8px 8px 22px 22px;
+    overflow: hidden; background: var(--page);
+    flex-shrink: 0;
+  }
+  .water {
+    position: absolute; left: 0; right: 0; bottom: 0;
+    height: 0%;
+    background: linear-gradient(180deg, var(--water) 0%, var(--water-deep) 100%);
+    transition: height 1.2s ease;
+  }
+  .wave {
+    position: absolute; left: -50%; top: -10px;
+    width: 200%; height: 20px;
+    fill: var(--water); opacity: 0.9;
+    animation: waveMove 4s linear infinite;
+  }
+  @keyframes waveMove {
+    from { transform: translateX(0); }
+    to   { transform: translateX(25%); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .wave { animation: none; }
+    .water { transition: none; }
+  }
+  .tank-info { font-size: 0.85rem; color: var(--text-secondary); line-height: 1.7; }
+  .tank-info .level-label { font-size: 1.05rem; font-weight: 650; color: var(--text-primary); }
+  .sensor-dots { display: flex; gap: 6px; margin-top: 6px; flex-wrap: wrap; }
+  .sensor-dots span {
+    font-size: 0.7rem; padding: 2px 8px; border-radius: 999px;
+    border: 1px solid var(--border); color: var(--text-muted);
+  }
+  .sensor-dots span.wet { color: var(--good-text); border-color: var(--st-good); font-weight: 600; }
+
+  /* ------------------------------------------------------------ lecturas */
+  .readings { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .stat .label {
+    font-size: 0.75rem; color: var(--text-muted);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .stat .value { font-size: 1.6rem; font-weight: 650; }
+  .stat .unit { font-size: 0.85rem; color: var(--text-secondary); font-weight: 400; }
+  .toggle {
+    display: inline-flex; border: 1px solid var(--border); border-radius: 6px; overflow: hidden;
+  }
+  .toggle button {
+    font: inherit; font-size: 0.7rem; font-weight: 600;
+    padding: 2px 8px; border: 0; cursor: pointer;
+    background: transparent; color: var(--text-muted);
+  }
+  .toggle button.active { background: var(--series-ec); color: #fff; }
+  .pump-state { display: inline-flex; align-items: center; gap: 6px; font-size: 1.05rem; font-weight: 650; }
+  .pump-state .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--text-muted); }
+  .pump-state.on .dot { background: var(--st-good); animation: pulse 1.2s ease infinite; }
+  @keyframes pulse { 50% { opacity: 0.35; } }
+
+  /* ------------------------------------------------------------ gráficos */
+  .range-row { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+  .range-row button {
+    font: inherit; font-size: 0.8rem; font-weight: 600;
+    padding: 6px 14px; border-radius: 8px; cursor: pointer;
+    border: 1px solid var(--border); background: var(--surface-1); color: var(--text-secondary);
+  }
+  .range-row button.active { color: var(--text-primary); border-color: var(--text-primary); }
+  .chart-card h2 span { color: var(--text-muted); font-weight: 400; text-transform: none; letter-spacing: 0; }
+  .chart-box { position: relative; height: 220px; }
+
+  details.table-view { margin-top: 16px; }
+  details.table-view summary {
+    cursor: pointer; font-size: 0.85rem; color: var(--text-secondary); padding: 8px 0;
+  }
+  .table-scroll { overflow-x: auto; }
+  table { border-collapse: collapse; font-size: 0.78rem; width: 100%; min-width: 720px; }
+  th, td { text-align: right; padding: 6px 10px; border-bottom: 1px solid var(--grid); font-variant-numeric: tabular-nums; }
+  th:first-child, td:first-child { text-align: left; }
+  th { color: var(--text-muted); font-weight: 600; }
+
+  .config-warning {
+    padding: 12px 16px; border-radius: 10px; margin-bottom: 16px;
+    border: 1px solid var(--border); border-left: 4px solid var(--st-warning);
+    background: var(--surface-1); font-size: 0.85rem; display: none;
+  }
+  footer { margin-top: 24px; color: var(--text-muted); font-size: 0.75rem; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🌱 Monitor hidroponía</h1>
+  <span class="updated" id="updated">—</span>
+  <span class="pill" id="status-pill"><span class="dot"></span><span id="status-text">Cargando…</span></span>
+</header>
+
+<div class="config-warning" id="config-warning">
+  ⚙️ Falta configurar la URL del backend: edita la constante <code>API_URL</code> al principio del script de esta página.
+</div>
+
+<div id="alert-banner" role="alert">
+  <span class="icon">⚠️</span><span id="alert-text"></span>
+</div>
+
+<div class="grid">
+  <div class="card">
+    <h2>Depósito principal · 60 L</h2>
+    <div class="tank-wrap">
+      <div class="vessel">
+        <div class="water" id="water-ppal">
+          <svg class="wave" viewBox="0 0 200 20" preserveAspectRatio="none">
+            <path d="M0 10 Q 12.5 0 25 10 T 50 10 T 75 10 T 100 10 T 125 10 T 150 10 T 175 10 T 200 10 V 20 H 0 Z"/>
+          </svg>
+        </div>
+      </div>
+      <div class="tank-info">
+        <div class="level-label" id="label-ppal">—</div>
+        <div id="desc-ppal">Sin datos</div>
+        <div class="sensor-dots">
+          <span id="s-ppal-alto">alto</span>
+          <span id="s-ppal-bajo">bajo</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Depósito auxiliar · 100 L</h2>
+    <div class="tank-wrap">
+      <div class="vessel">
+        <div class="water" id="water-aux">
+          <svg class="wave" viewBox="0 0 200 20" preserveAspectRatio="none">
+            <path d="M0 10 Q 12.5 0 25 10 T 50 10 T 75 10 T 100 10 T 125 10 T 150 10 T 175 10 T 200 10 V 20 H 0 Z"/>
+          </svg>
+        </div>
+      </div>
+      <div class="tank-info">
+        <div class="level-label" id="label-aux">—</div>
+        <div id="desc-aux">Sin datos</div>
+        <div class="sensor-dots">
+          <span id="s-aux-alto">alto</span>
+          <span id="s-aux-medio">medio</span>
+          <span id="s-aux-bajo">bajo</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Lecturas</h2>
+    <div class="readings">
+      <div class="stat">
+        <div class="label">🌡️ Temperatura agua</div>
+        <div class="value" id="v-temp">—<span class="unit"> °C</span></div>
+      </div>
+      <div class="stat">
+        <div class="label">
+          <span id="ec-label">⚡ EC</span>
+          <span class="toggle">
+            <button id="btn-ec" class="active">EC</button>
+            <button id="btn-tds">TDS</button>
+          </span>
+        </div>
+        <div class="value" id="v-ec">—<span class="unit" id="u-ec"> µS/cm</span></div>
+      </div>
+      <div class="stat">
+        <div class="label">🚰 Bomba</div>
+        <div class="pump-state" id="pump"><span class="dot"></span><span id="pump-text">—</span></div>
+      </div>
+      <div class="stat">
+        <div class="label">📶 WiFi (RSSI)</div>
+        <div class="value" id="v-rssi">—<span class="unit"> dBm</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="range-row" id="range-row">
+  <button data-hours="6">6 h</button>
+  <button data-hours="24" class="active">24 h</button>
+  <button data-hours="48">48 h</button>
+  <button data-hours="168">7 días</button>
+</div>
+
+<div class="grid">
+  <div class="card chart-card">
+    <h2 id="chart-ec-title">EC <span id="chart-ec-unit">(µS/cm)</span></h2>
+    <div class="chart-box"><canvas id="chart-ec"></canvas></div>
+  </div>
+  <div class="card chart-card">
+    <h2>Temperatura <span>(°C)</span></h2>
+    <div class="chart-box"><canvas id="chart-temp"></canvas></div>
+  </div>
+</div>
+
+<details class="table-view">
+  <summary>Ver datos en tabla</summary>
+  <div class="table-scroll">
+    <table>
+      <thead><tr>
+        <th>Fecha</th><th>Temp (°C)</th><th>EC (µS/cm)</th><th>TDS (ppm)</th>
+        <th>Ppal alto</th><th>Ppal bajo</th><th>Aux alto</th><th>Aux medio</th><th>Aux bajo</th>
+        <th>Bomba</th><th>Alerta</th><th>RSSI</th>
+      </tr></thead>
+      <tbody id="table-body"></tbody>
+    </table>
+  </div>
+</details>
+
+<footer>
+  Datos vía Google Apps Script + Sheets · actualización automática cada <span id="f-refresh">60</span> s
+</footer>
+
+<script>
+'use strict';
+
+/* ============================== CONFIGURACIÓN ==============================
+ * API_URL: URL /exec de la implementación web del Apps Script (backend/Code.gs)
+ */
+const API_URL = 'PON_AQUI_LA_URL_EXEC_DE_APPS_SCRIPT';
+
+const REFRESH_MS  = 60 * 1000;  // refresco del dashboard
+const STALE_MIN   = 5;          // > 5 min sin datos → "desactualizado"
+const OFFLINE_MIN = 15;         // > 15 min sin datos → "sin conexión"
+/* ========================================================================== */
+
+const ALERT_TEXT = {
+  marcha_seco:   'Bomba detenida: el depósito auxiliar está vacío (protección de marcha en seco).',
+  timeout_bomba: 'Bomba detenida por tiempo máximo de seguridad sin alcanzar el nivel alto.',
+  sensor_fallo:  'Lectura incoherente de los sensores de nivel: revisar sensores.'
+};
+
+// Celda vacía del Sheet llega como '' y Number('') es 0: tratarla como ausente
+function numOr(v) {
+  return (v === '' || v === null || v === undefined) ? NaN : Number(v);
+}
+
+let showTDS = false;
+let historyHours = 24;
+let historyRows = [];
+let lastRow = null;
+let chartEC = null, chartTemp = null;
+
+// ------------------------------------------------------------------ red
+
+function apiFetch(params) {
+  const url = API_URL + (API_URL.includes('?') ? '&' : '?') + params;
+  return fetch(url).then(r => {
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    return r.json();
+  }).catch(() => jsonp(url)); // fallback JSONP si fetch/CORS falla
+}
+
+function jsonp(url) {
+  return new Promise((resolve, reject) => {
+    const cb = 'jsonp_cb_' + Math.floor(Math.random() * 1e9);
+    const script = document.createElement('script');
+    const timer = setTimeout(() => { cleanup(); reject(new Error('JSONP timeout')); }, 15000);
+    function cleanup() {
+      clearTimeout(timer);
+      delete window[cb];
+      script.remove();
+    }
+    window[cb] = data => { cleanup(); resolve(data); };
+    script.onerror = () => { cleanup(); reject(new Error('JSONP error')); };
+    script.src = url + '&callback=' + cb;
+    document.head.appendChild(script);
+  });
+}
+
+// ------------------------------------------------------------------ estado
+
+function setPill(mode, text) {
+  const pill = document.getElementById('status-pill');
+  pill.className = 'pill ' + mode;
+  document.getElementById('status-text').textContent = text;
+}
+
+function renderStatus(row) {
+  if (!row) { setPill('offline', 'Sin datos'); return; }
+  lastRow = row;
+
+  const ts = new Date(row.timestamp);
+  const ageMin = (Date.now() - ts.getTime()) / 60000;
+  document.getElementById('updated').textContent =
+    'Última lectura: ' + ts.toLocaleString('es-ES', { dateStyle: 'short', timeStyle: 'short' });
+
+  if (ageMin > OFFLINE_MIN)    setPill('offline', '🔴 Sin conexión');
+  else if (ageMin > STALE_MIN) setPill('stale',   '🟡 Desactualizado');
+  else                         setPill('online',  '🟢 En línea');
+
+  // Banner de alertas (icono + texto, nunca solo color)
+  const banner = document.getElementById('alert-banner');
+  const alerta = String(row.alerta || '').trim();
+  if (alerta && ALERT_TEXT[alerta]) {
+    document.getElementById('alert-text').textContent = ALERT_TEXT[alerta];
+    banner.classList.add('visible');
+  } else if (alerta) {
+    document.getElementById('alert-text').textContent = 'Alerta: ' + alerta;
+    banner.classList.add('visible');
+  } else {
+    banner.classList.remove('visible');
+  }
+
+  renderTanks(row);
+  renderReadings(row);
+}
+
+function renderTanks(row) {
+  // Principal: 2 sensores → 3 estados
+  const pAlto = Number(row.nivel_ppal_alto) === 1;
+  const pBajo = Number(row.nivel_ppal_bajo) === 1;
+  let pPct, pLabel, pDesc;
+  if (pAlto && pBajo)      { pPct = 96; pLabel = 'Lleno';  pDesc = 'Por encima del nivel alto'; }
+  else if (pBajo)          { pPct = 55; pLabel = 'Medio';  pDesc = 'Entre nivel bajo y alto'; }
+  else if (!pAlto)         { pPct = 15; pLabel = 'Bajo';   pDesc = 'Por debajo del nivel de arranque'; }
+  if (pAlto && !pBajo)     { pPct = 55; pLabel = 'Sensor?'; pDesc = '⚠️ Lectura incoherente (alto sin bajo)'; }
+  document.getElementById('water-ppal').style.height = pPct + '%';
+  document.getElementById('label-ppal').textContent = pLabel;
+  document.getElementById('desc-ppal').textContent = pDesc;
+  markSensor('s-ppal-alto', pAlto); markSensor('s-ppal-bajo', pBajo);
+
+  // Auxiliar: 3 sensores → 4 estados
+  const aAlto = Number(row.nivel_aux_alto) === 1;
+  const aMedio = Number(row.nivel_aux_medio) === 1;
+  const aBajo = Number(row.nivel_aux_bajo) === 1;
+  let aPct, aLabel, aDesc;
+  if (aAlto)       { aPct = 96; aLabel = 'Lleno';  aDesc = 'Por encima del nivel medio-alto'; }
+  else if (aMedio) { aPct = 66; aLabel = 'Medio';  aDesc = 'Entre nivel medio y medio-alto'; }
+  else if (aBajo)  { aPct = 33; aLabel = 'Bajo';   aDesc = 'Reserva baja: rellenar pronto'; }
+  else             { aPct = 4;  aLabel = 'Vacío';  aDesc = '⚠️ Bomba bloqueada (anti marcha en seco)'; }
+  if ((aAlto && !aMedio) || (aMedio && !aBajo)) {
+    aDesc = '⚠️ Lectura incoherente de sensores';
+  }
+  document.getElementById('water-aux').style.height = aPct + '%';
+  document.getElementById('label-aux').textContent = aLabel;
+  document.getElementById('desc-aux').textContent = aDesc;
+  markSensor('s-aux-alto', aAlto); markSensor('s-aux-medio', aMedio); markSensor('s-aux-bajo', aBajo);
+}
+
+function markSensor(id, wet) {
+  document.getElementById(id).classList.toggle('wet', wet);
+}
+
+function renderReadings(row) {
+  const temp = numOr(row.temp_c);
+  document.getElementById('v-temp').innerHTML =
+    (isFinite(temp) ? temp.toFixed(1) : '—') + '<span class="unit"> °C</span>';
+
+  const ec = numOr(row.ec_us), tds = numOr(row.tds_ppm);
+  const val = showTDS ? tds : ec;
+  const unit = showTDS ? ' ppm' : ' µS/cm';
+  document.getElementById('v-ec').innerHTML =
+    (isFinite(val) ? Math.round(val) : '—') + '<span class="unit">' + unit + '</span>';
+  document.getElementById('ec-label').textContent = showTDS ? '⚡ TDS' : '⚡ EC';
+
+  const pumpOn = Number(row.bomba) === 1;
+  document.getElementById('pump').className = 'pump-state' + (pumpOn ? ' on' : '');
+  document.getElementById('pump-text').textContent = pumpOn ? 'En marcha' : 'Parada';
+
+  const rssi = numOr(row.rssi);
+  document.getElementById('v-rssi').innerHTML =
+    (isFinite(rssi) ? rssi : '—') + '<span class="unit"> dBm</span>';
+}
+
+// ------------------------------------------------------------------ gráficos
+
+function cssVar(name) {
+  return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+}
+
+function baseOptions(unit) {
+  return {
+    responsive: true,
+    maintainAspectRatio: false,
+    animation: false,
+    interaction: { mode: 'index', intersect: false },
+    plugins: {
+      legend: { display: false }, // una serie por gráfico: el título la nombra
+      tooltip: {
+        backgroundColor: cssVar('--surface-1'),
+        titleColor: cssVar('--text-primary'),
+        bodyColor: cssVar('--text-secondary'),
+        borderColor: cssVar('--grid'),
+        borderWidth: 1,
+        displayColors: false,
+        callbacks: {
+          label: ctx => ctx.formattedValue + ' ' + unit
+        }
+      }
+    },
+    scales: {
+      x: {
+        grid: { display: false },
+        border: { color: cssVar('--baseline') },
+        ticks: { color: cssVar('--text-muted'), maxTicksLimit: 6, maxRotation: 0 }
+      },
+      y: {
+        grid: { color: cssVar('--grid') },
+        border: { display: false },
+        ticks: { color: cssVar('--text-muted'), maxTicksLimit: 5 }
+      }
+    }
+  };
+}
+
+function makeLine(canvasId, color, unit) {
+  return new Chart(document.getElementById(canvasId), {
+    type: 'line',
+    data: { labels: [], datasets: [{
+      data: [],
+      borderColor: color,
+      borderWidth: 2,
+      pointRadius: 0,
+      pointHoverRadius: 4,
+      pointHoverBackgroundColor: color,
+      tension: 0.25
+    }]},
+    options: baseOptions(unit)
+  });
+}
+
+function fmtTime(iso, longRange) {
+  const d = new Date(iso);
+  return longRange
+    ? d.toLocaleString('es-ES', { day: '2-digit', month: '2-digit' }) + ' ' +
+      d.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })
+    : d.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+}
+
+function renderCharts() {
+  const longRange = historyHours > 24;
+  const labels = historyRows.map(r => fmtTime(r.timestamp, longRange));
+
+  document.getElementById('chart-ec-title').childNodes[0].nodeValue = showTDS ? 'TDS ' : 'EC ';
+  document.getElementById('chart-ec-unit').textContent = showTDS ? '(ppm)' : '(µS/cm)';
+
+  chartEC.data.labels = labels;
+  chartEC.data.datasets[0].data = historyRows.map(r => numOr(showTDS ? r.tds_ppm : r.ec_us));
+  chartEC.options = baseOptions(showTDS ? 'ppm' : 'µS/cm');
+  chartEC.update();
+
+  chartTemp.data.labels = labels;
+  chartTemp.data.datasets[0].data = historyRows.map(r => numOr(r.temp_c));
+  chartTemp.update();
+
+  renderTable();
+}
+
+function renderTable() {
+  const rows = historyRows.slice(-100).reverse();
+  document.getElementById('table-body').innerHTML = rows.map(r => `
+    <tr>
+      <td>${new Date(r.timestamp).toLocaleString('es-ES', { dateStyle: 'short', timeStyle: 'short' })}</td>
+      <td>${fmt(r.temp_c, 1)}</td><td>${fmt(r.ec_us)}</td><td>${fmt(r.tds_ppm)}</td>
+      <td>${fmt(r.nivel_ppal_alto)}</td><td>${fmt(r.nivel_ppal_bajo)}</td>
+      <td>${fmt(r.nivel_aux_alto)}</td><td>${fmt(r.nivel_aux_medio)}</td><td>${fmt(r.nivel_aux_bajo)}</td>
+      <td>${Number(r.bomba) === 1 ? 'ON' : 'off'}</td>
+      <td>${r.alerta || ''}</td><td>${fmt(r.rssi)}</td>
+    </tr>`).join('');
+}
+
+function fmt(v, dec) {
+  const n = numOr(v);
+  if (!isFinite(n)) return '—';
+  return dec ? n.toFixed(dec) : String(Math.round(n));
+}
+
+// ------------------------------------------------------------------ ciclo
+
+async function refreshStatus() {
+  try {
+    const res = await apiFetch('action=status');
+    if (res && res.ok) renderStatus(res.row);
+    else setPill('offline', 'Error backend');
+  } catch (e) {
+    setPill('offline', 'Sin respuesta');
+  }
+}
+
+async function refreshHistory() {
+  try {
+    const res = await apiFetch('action=history&hours=' + historyHours);
+    if (res && res.ok) { historyRows = res.rows || []; renderCharts(); }
+  } catch (e) { /* se reintenta en el siguiente ciclo */ }
+}
+
+function init() {
+  if (API_URL.startsWith('PON_AQUI')) {
+    document.getElementById('config-warning').style.display = 'block';
+    setPill('offline', 'Sin configurar');
+    return;
+  }
+
+  chartEC = makeLine('chart-ec', cssVar('--series-ec'), 'µS/cm');
+  chartTemp = makeLine('chart-temp', cssVar('--series-temp'), '°C');
+
+  document.getElementById('btn-ec').addEventListener('click', () => setTDS(false));
+  document.getElementById('btn-tds').addEventListener('click', () => setTDS(true));
+
+  document.getElementById('range-row').addEventListener('click', ev => {
+    const btn = ev.target.closest('button[data-hours]');
+    if (!btn) return;
+    historyHours = Number(btn.dataset.hours);
+    document.querySelectorAll('#range-row button').forEach(b => b.classList.toggle('active', b === btn));
+    refreshHistory();
+  });
+
+  // Al cambiar el tema del sistema se regeneran los gráficos con la paleta nueva
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+    chartEC.destroy(); chartTemp.destroy();
+    chartEC = makeLine('chart-ec', cssVar('--series-ec'), showTDS ? 'ppm' : 'µS/cm');
+    chartTemp = makeLine('chart-temp', cssVar('--series-temp'), '°C');
+    renderCharts();
+    refreshStatus();
+  });
+
+  document.getElementById('f-refresh').textContent = REFRESH_MS / 1000;
+
+  refreshStatus();
+  refreshHistory();
+  setInterval(refreshStatus, REFRESH_MS);
+  setInterval(refreshHistory, REFRESH_MS * 5);
+}
+
+function setTDS(v) {
+  showTDS = v;
+  document.getElementById('btn-ec').classList.toggle('active', !v);
+  document.getElementById('btn-tds').classList.toggle('active', v);
+  if (lastRow) renderReadings(lastRow);
+  renderCharts();
+}
+
+init();
+</script>
+</body>
+</html>
