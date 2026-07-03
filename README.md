@@ -113,6 +113,9 @@ Confirmado: agua = `1`, sin agua = `0`.
   `config.h`): la mayoría de módulos de relé de 1 canal disparan con IN=LOW.
   Verificar con el módulo real y ajustar.
 - Lectura de niveles con **voto por mayoría** (5 muestras) para filtrar ruido.
+- **Modo solo monitorización**: con `BOMBA_HABILITADA 0` en `config.h` el relé
+  no se activa nunca ni genera alertas de bomba — para tener los sensores en
+  producción antes de conectar el circuito de 12 V.
 - EC compensada por temperatura (2 %/°C respecto a 25 °C); TDS = EC × 0.5
   (escala ppm-500). Calibrar `TDS_KFACTOR` con solución patrón.
 

@@ -30,6 +30,13 @@
 // activos a nivel BAJO (IN=LOW → relé cerrado). Ajustar tras probar.
 #define RELE_ACTIVO_BAJO 1
 
+// Interruptor de software de la bomba:
+//   1 = control automático normal
+//   0 = modo solo monitorización: el relé NUNCA se activa (sin alertas de
+//       bomba); útil para dejar los sensores en producción antes de conectar
+//       el circuito de 12 V
+#define BOMBA_HABILITADA 1
+
 // Sensores XKC-Y25 — confirmado en pruebas: agua = 1, sin agua = 0.
 // PENDIENTE multímetro: si la salida es colector abierto harán falta
 // pull-ups/divisores externos en GPIO34/36/39 (no tienen pull-up interno).

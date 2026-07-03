@@ -98,6 +98,15 @@ static void setAlerta(Alerta a) {
 }
 
 static void controlBomba(const Niveles& n) {
+  // Modo solo monitorización: el relé nunca se activa. La alerta de sensores
+  // incoherentes se mantiene (es información de sensores, no de bomba)
+  if (!BOMBA_HABILITADA) {
+    if (nivelesIncoherentes(n)) setAlerta(Alerta::SENSOR_FALLO);
+    else if (alertaActiva == Alerta::SENSOR_FALLO) setAlerta(Alerta::NINGUNA);
+    setBomba(false);
+    return;
+  }
+
   // 0) Sensores incoherentes: parar y bloquear hasta que la lectura sea sana
   if (nivelesIncoherentes(n)) {
     setBomba(false);

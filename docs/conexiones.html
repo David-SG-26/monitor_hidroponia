@@ -697,14 +697,13 @@
       <text x="540" y="203" class="lbl2" text-anchor="middle">12 V DC</text>
       <path d="M540 230 V265 H100" class="wire" stroke="var(--w-gnd)"/>
       <text x="240" y="259" class="lbl2">bomba − → negativo de la fuente (GND común)</text>
-      <!-- diodo en paralelo -->
-      <path d="M620 150 V120 H540" class="wire" stroke="var(--w-12v)" stroke-width="1.8"/>
-      <path d="M620 230 V186" class="wire" stroke="var(--w-gnd)" stroke-width="1.8"/>
-      <circle cx="540" cy="150" r="3.5" fill="var(--w-12v)" class="dot"/>
+      <!-- diodo en paralelo: barra (banda) arriba conectada al +, triángulo abajo al − -->
+      <path d="M620 162 V120 H540" class="wire" stroke="var(--w-12v)" stroke-width="1.8"/>
+      <circle cx="540" cy="120" r="3.5" fill="var(--w-12v)" class="dot"/>
+      <path d="M620 188 V230 H540" class="wire" stroke="var(--w-gnd)" stroke-width="1.8"/>
       <circle cx="540" cy="230" r="3.5" fill="var(--w-gnd)" class="dot"/>
-      <!-- diode symbol: triangle pointing up + bar at top (cathode toward +) -->
-      <path d="M610 186 H630 L620 166 Z" fill="none" stroke="var(--text-primary)" stroke-width="1.6"/>
-      <path d="M610 164 H630" stroke="var(--text-primary)" stroke-width="2.4"/>
+      <path d="M610 162 H630" stroke="var(--text-primary)" stroke-width="2.4"/>
+      <path d="M610 188 H630 L620 164 Z" fill="none" stroke="var(--text-primary)" stroke-width="1.6"/>
       <text x="643" y="172" class="lbl2">HER208</text>
       <text x="643" y="188" class="lbl2">banda gris</text>
       <text x="643" y="203" class="lbl2">hacia el +</text>
@@ -882,7 +881,7 @@
       <path d="M560 765 H497" class="wire" stroke="var(--w-gnd)"/>
       <circle cx="497" cy="765" r="4" fill="var(--w-gnd)" class="dot"/>
       <!-- COM desde alimentación -->
-      <path d="M700 975 H760 V750 H720" class="wire" stroke="var(--w-12v)"/>
+      <path d="M700 1005 H760 V750 H720" class="wire" stroke="var(--w-12v)"/>
       <!-- NO a bomba -->
       <path d="M720 780 H740 V845 H535" class="wire" stroke="var(--w-12v)"/>
       <circle cx="600" cy="845" r="4" fill="var(--w-12v)" class="dot"/>
@@ -892,7 +891,7 @@
       <rect x="560" y="860" width="160" height="70" rx="8" class="comp"/>
       <text x="640" y="888" class="lbl" text-anchor="middle">Bomba 12 V</text>
       <text x="640" y="906" class="lbl2" text-anchor="middle">(+ arriba, − abajo)</text>
-      <path d="M600 930 V1005" class="wire" stroke="var(--w-gnd)"/>
+      <path d="M600 930 V975" class="wire" stroke="var(--w-gnd)"/>
       <!-- diodo HER208 en paralelo -->
       <path d="M535 845 V862" class="wire" stroke="var(--w-12v)" stroke-width="1.8"/>
       <path d="M525 864 H545" stroke="var(--text-primary)" stroke-width="2.6"/>
@@ -915,18 +914,18 @@
       <rect x="340" y="960" width="130" height="70" rx="8" class="comp"/>
       <text x="405" y="983" class="lbl" text-anchor="middle">Conversor</text>
       <text x="405" y="1000" class="lbl2" text-anchor="middle">jack → bornes</text>
-      <text x="478" y="971" class="lbl2">+</text>
-      <text x="478" y="1018" class="lbl2">−</text>
-      <!-- + : fusible + interruptor -->
-      <path d="M470 975 H545" class="wire" stroke="var(--w-12v)"/>
-      <rect x="545" y="963" width="65" height="24" rx="4" class="res"/>
-      <text x="577" y="980" class="lbl2" text-anchor="middle">fusible</text>
-      <path d="M610 975 H630" class="wire" stroke="var(--w-12v)"/>
-      <rect x="630" y="963" width="70" height="24" rx="4" class="res"/>
-      <text x="665" y="980" class="lbl2" text-anchor="middle">interr.</text>
-      <!-- - -->
-      <path d="M470 1005 H600" class="wire" stroke="var(--w-gnd)"/>
-      <circle cx="600" cy="1005" r="4" fill="var(--w-gnd)" class="dot"/>
+      <text x="478" y="971" class="lbl2">−</text>
+      <text x="478" y="1018" class="lbl2">+</text>
+      <!-- − arriba: directo al negativo de la bomba, sin cruces -->
+      <path d="M470 975 H600" class="wire" stroke="var(--w-gnd)"/>
+      <circle cx="600" cy="975" r="4" fill="var(--w-gnd)" class="dot"/>
+      <!-- + abajo: fusible + interruptor y sube al COM -->
+      <path d="M470 1005 H545" class="wire" stroke="var(--w-12v)"/>
+      <rect x="545" y="993" width="65" height="24" rx="4" class="res"/>
+      <text x="577" y="1010" class="lbl2" text-anchor="middle">fusible</text>
+      <path d="M610 1005 H630" class="wire" stroke="var(--w-12v)"/>
+      <rect x="630" y="993" width="70" height="24" rx="4" class="res"/>
+      <text x="665" y="1010" class="lbl2" text-anchor="middle">interr.</text>
       <text x="15" y="820" class="lbl2">Los cables azules de los XKC-Y25 quedan aislados con cinta (no se dibujan).</text>
       <text x="15" y="838" class="lbl2">El detalle interno de cada bloque de filas está en los zooms de las secciones 4 y 5.</text>
     </svg>
@@ -1118,7 +1117,12 @@ void loop() {
 <!-- ============================================================ FIRMWARE -->
 <section id="firmware">
   <h2><span class="num">12</span>Paso 2 · Firmware definitivo</h2>
-  <p>Cuando todas las pruebas pasen, carga este sketch. Es el firmware completo: control automático de la bomba con sus protecciones y envío de datos al dashboard. <strong>Antes de subirlo, edita las 4 líneas del bloque CONFIGURA ESTO</strong> (WiFi y backend; el token debe ser el mismo que pusiste en el Apps Script).</p>
+  <p>Cuando todas las pruebas pasen, carga este sketch. Es el firmware completo: control automático de la bomba con sus protecciones y envío de datos al dashboard. <strong>Antes de subirlo, edita el bloque CONFIGURA ESTO</strong>:</p>
+  <ul>
+    <li><code>WIFI_SSID</code> / <code>WIFI_PASS</code>: el nombre <strong>exacto</strong> de tu red WiFi (mayúsculas y espacios incluidos) y su contraseña. Ojo: <strong>el ESP32 solo ve redes de 2.4 GHz</strong> — si tu router emite una red "..._5G", usa la otra; si solo tienes una con banda dual, normalmente funciona porque el router asigna la banda.</li>
+    <li><code>API_URL</code> / <code>API_TOKEN</code>: la URL <code>/exec</code> del Apps Script y el mismo token que fijaste en su <code>setup()</code>.</li>
+    <li><code>BOMBA_HABILITADA</code>: déjalo a <code>0</code> mientras solo quieras monitorizar (el relé no se activará nunca, sin alertas falsas); cámbialo a <code>1</code> y vuelve a subir el sketch cuando conectes el circuito de 12 V de la bomba.</li>
+  </ul>
 
   <div class="codeblock">
     <button data-copy>Copiar</button>
@@ -1136,10 +1140,15 @@ void loop() {
 #include "driver/gpio.h"
 
 // ========================= CONFIGURA ESTO =========================
+// WiFi: nombre EXACTO de tu red (solo redes de 2.4 GHz) y su contrasena
 #define WIFI_SSID   "PON_AQUI_TU_SSID"
 #define WIFI_PASS   "PON_AQUI_TU_PASSWORD"
 #define API_URL     "PON_AQUI_LA_URL_EXEC_DE_APPS_SCRIPT"
 #define API_TOKEN   "PON_AQUI_UN_TOKEN_SECRETO"
+// Interruptor de software de la bomba:
+//   0 = solo monitorizacion: el rele NUNCA se activa (tu caso ahora)
+//   1 = control automatico de la bomba (cambiar cuando conectes el 12 V)
+#define BOMBA_HABILITADA 0
 // ==================================================================
 
 // Pines (segun la guia de montaje)
@@ -1237,6 +1246,14 @@ void setAlerta(Alerta a) {
 }
 
 void controlBomba(const Niveles&amp; n) {
+  // Modo solo monitorizacion: el rele nunca se activa
+  if (!BOMBA_HABILITADA) {
+    if (nivelesIncoherentes(n)) setAlerta(Alerta::SENSOR_FALLO);
+    else if (alertaActiva == Alerta::SENSOR_FALLO) setAlerta(Alerta::NINGUNA);
+    setBomba(false);
+    return;
+  }
+
   if (nivelesIncoherentes(n)) {
     setBomba(false);
     setAlerta(Alerta::SENSOR_FALLO);
