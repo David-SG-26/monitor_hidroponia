@@ -1,20 +1,30 @@
 /*
- * TEST DE UN SENSOR DE NIVEL XKC-Y25 — lo más simple posible
- * -----------------------------------------------------------
- * Prueba UN solo sensor. Empieza por el del pin 32 (principal alto) y,
- * cuando funcione, cambia el número de PIN_SENSOR y repite con los demás:
+ * TEST DE UN SENSOR XKC-Y25-V (salida por voltaje, con cable de modo)
+ * -------------------------------------------------------------------
+ * IMPORTANTE — el cable AZUL (modo) NO es opcional en la version -V:
+ *   - Azul al POSITIVO 5V (misma columna que el rojo) -> salida normal:
+ *       amarillo saca nivel ALTO (~5V) cuando hay agua.
+ *   - Azul a GND (negro)  -> logica invertida.
+ *   - Azul al aire        -> salida indefinida: leera siempre 0 aunque
+ *                            el LED rojo del sensor si reaccione.
  *
- *   GPIO32 → principal alto      GPIO36 → auxiliar medio (VP)
- *   GPIO33 → principal bajo      GPIO39 → auxiliar bajo  (VN)
- *   GPIO34 → auxiliar medio-alto
+ * CONEXION para esta prueba:
+ *   rojo  -> +5V
+ *   negro -> GND
+ *   azul  -> +5V   (mismo rail que el rojo)  <-- clave
+ *   amarillo (senal) -> divisor 2x10k -> punto medio a GPIO32
  *
- * Cómo probar: abre el Monitor Serie a 115200 baudios. Debe decir
- * "SIN AGUA (0)". Pega la palma de la mano (o un vaso de agua) a la cara
- * de detección del sensor: debe cambiar a "AGUA (1)". El LED azul de la
- * placa también se enciende con agua, por si no ves el monitor.
+ * CÓMO INTERPRETAR EL MONITOR SERIE (115200 baudios):
  *
- * Recuerda: el amarillo del sensor NO va directo al pin — pasa por su
- * divisor de 2 resistencias de 10k en la protoboard (sección 4 de la guía).
+ *   Sin palma = 0  y  con palma = 1   -> PERFECTO, logica normal.
+ *   Sin palma = 1  y  con palma = 0   -> invertido: no toques el
+ *       hardware, se arregla en firmware con NIVEL_AGUA_PRESENTE 0.
+ *   Siempre 0, pase lo que pase       -> el azul sigue sin conectar,
+ *       o el amarillo no llega al pin (revisa el punto medio del divisor).
+ *   Parpadea 0/1 sin tocar            -> el divisor deja ~2,5V (limite
+ *       alto del ESP32); avisa para cambiar la proporcion de resistencias.
+ *
+ * Pines para repetir la prueba con los demas sensores: 32, 33, 34, 36, 39.
  */
 
 #define PIN_SENSOR 32   // ← cambia este número para probar otro sensor
@@ -25,20 +35,17 @@ void setup() {
   pinMode(PIN_SENSOR, INPUT);
   pinMode(PIN_LED, OUTPUT);
   Serial.println();
-  Serial.print("=== Probando sensor en GPIO");
+  Serial.print("=== Prueba del sensor en GPIO");
   Serial.print(PIN_SENSOR);
   Serial.println(" ===");
-  Serial.println("Acerca la mano o agua a la cara del sensor y observa.");
+  Serial.println("Recuerda: cable AZUL conectado a +5V.");
+  Serial.println("Apunta que lee SIN palma y CON palma.");
 }
 
 void loop() {
   int lectura = digitalRead(PIN_SENSOR);
   digitalWrite(PIN_LED, lectura ? HIGH : LOW);
-
-  if (lectura == 1) {
-    Serial.println("AGUA (1)");
-  } else {
-    Serial.println("SIN AGUA (0)");
-  }
+  if (lectura == 1) Serial.println("AGUA (1)");
+  else              Serial.println("SIN AGUA (0)");
   delay(500);
 }
