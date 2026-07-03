@@ -37,9 +37,12 @@
 //       el circuito de 12 V
 #define BOMBA_HABILITADA 1
 
-// Sensores XKC-Y25 — confirmado en pruebas: agua = 1, sin agua = 0.
-// PENDIENTE multímetro: si la salida es colector abierto harán falta
-// pull-ups/divisores externos en GPIO34/36/39 (no tienen pull-up interno).
+// Sensores XKC-Y25 (salida por voltaje) — confirmado en pruebas: agua = 1,
+// sin agua = 0. Cableado real: rojo/rosa = +5V, azul = GND, amarillo = señal,
+// negro = modo (se deja AISLADO, sin conectar). La señal sale a ~5V, así que
+// cada amarillo pasa por UNA resistencia de 10k EN SERIE hasta el GPIO: protege
+// el pin y no baja el nivel lógico (no es divisor). Si alguna unidad invierte
+// la lógica, poner NIVEL_AGUA_PRESENTE 0.
 #define NIVEL_AGUA_PRESENTE 1
 
 // ================================ TIEMPOS =================================
