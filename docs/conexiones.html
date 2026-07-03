@@ -1,0 +1,1094 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Guía de montaje · Monitor hidroponía</title>
+<link rel="icon" href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 3C12 3 6 10 6 14a6 6 0 0 0 12 0C18 10 12 3 12 3Z" fill="%232a78d6"/></svg>'>
+<style>
+  :root {
+    --surface-1: #fcfcfb;
+    --page: #f9f9f7;
+    --text-primary: #0b0b0b;
+    --text-secondary: #52514e;
+    --text-muted: #898781;
+    --grid: #e1e0d9;
+    --border: rgba(11,11,11,0.10);
+    --accent: #2a78d6;
+    --st-good: #0ca30c;
+    --st-warning: #fab219;
+    --st-critical: #d03b3b;
+    --code-bg: #f2f1ec;
+    /* colores de cableado (fijos, con etiqueta de texto siempre al lado) */
+    --w-5v: #e34948;
+    --w-12v: #ec835a;
+    --w-gnd: #52514e;
+    --w-sig: #c98500;
+    --w-gpio: #008300;
+    --w-3v3: #4a3aa7;
+    --w-azul: #2a78d6;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --surface-1: #1a1a19;
+      --page: #0d0d0d;
+      --text-primary: #ffffff;
+      --text-secondary: #c3c2b7;
+      --text-muted: #898781;
+      --grid: #2c2c2a;
+      --border: rgba(255,255,255,0.10);
+      --accent: #3987e5;
+      --code-bg: #111110;
+      --w-gnd: #c3c2b7;
+      --w-3v3: #9085e9;
+    }
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    background: var(--page); color: var(--text-primary);
+    max-width: 900px; margin: 0 auto; padding: 16px 16px 60px;
+    line-height: 1.55;
+  }
+  .ic {
+    width: 16px; height: 16px; flex-shrink: 0;
+    stroke: currentColor; fill: none;
+    stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round;
+  }
+
+  header { display: flex; align-items: center; gap: 10px; margin: 8px 0 4px; }
+  header h1 { font-size: 1.3rem; font-weight: 650; }
+  header .ic { width: 22px; height: 22px; stroke: var(--accent); }
+  .subtitle { color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 20px; }
+  .subtitle a { color: var(--accent); }
+
+  nav.toc {
+    background: var(--surface-1); border: 1px solid var(--border); border-radius: 12px;
+    padding: 14px 18px; margin-bottom: 24px; font-size: 0.88rem;
+  }
+  nav.toc ol { margin-left: 20px; }
+  nav.toc a { color: var(--accent); text-decoration: none; }
+  nav.toc a:hover { text-decoration: underline; }
+
+  section { margin-bottom: 34px; }
+  h2 {
+    font-size: 1.05rem; font-weight: 650; margin-bottom: 12px;
+    padding-bottom: 6px; border-bottom: 1px solid var(--grid);
+    display: flex; align-items: center; gap: 8px;
+  }
+  h2 .num {
+    background: var(--accent); color: #fff; border-radius: 6px;
+    font-size: 0.8rem; padding: 1px 8px; font-weight: 650;
+  }
+  h3 { font-size: 0.92rem; font-weight: 650; margin: 16px 0 8px; }
+  p, li { font-size: 0.9rem; color: var(--text-secondary); }
+  p strong, li strong { color: var(--text-primary); }
+  ul, ol { margin: 8px 0 8px 22px; }
+  li { margin-bottom: 4px; }
+
+  .card {
+    background: var(--surface-1); border: 1px solid var(--border);
+    border-radius: 12px; padding: 16px; margin: 12px 0;
+  }
+  .warn, .okbox, .infobox {
+    display: flex; gap: 10px; align-items: flex-start;
+    border: 1px solid var(--border); border-radius: 10px;
+    padding: 12px 14px; margin: 12px 0; font-size: 0.88rem;
+    background: var(--surface-1);
+  }
+  .warn { border-left: 4px solid var(--st-critical); }
+  .warn .ic { stroke: var(--st-critical); margin-top: 2px; }
+  .okbox { border-left: 4px solid var(--st-good); }
+  .okbox .ic { stroke: var(--st-good); margin-top: 2px; }
+  .infobox { border-left: 4px solid var(--st-warning); }
+  .infobox .ic { stroke: var(--st-warning); margin-top: 2px; }
+
+  table { border-collapse: collapse; width: 100%; font-size: 0.85rem; margin: 10px 0; }
+  th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--grid); vertical-align: top; }
+  th { color: var(--text-muted); font-weight: 600; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.03em; }
+  td code, li code, p code {
+    background: var(--code-bg); border-radius: 4px; padding: 1px 6px;
+    font-size: 0.83em; color: var(--text-primary);
+  }
+  .table-scroll { overflow-x: auto; }
+
+  .diagram {
+    background: var(--surface-1); border: 1px solid var(--border);
+    border-radius: 12px; padding: 10px; margin: 12px 0; overflow-x: auto;
+  }
+  .diagram svg { display: block; margin: 0 auto; max-width: 100%; height: auto; }
+  .diagram text { font-family: system-ui, sans-serif; fill: var(--text-primary); }
+  .diagram .lbl  { font-size: 12px; }
+  .diagram .lbl2 { font-size: 11px; fill: var(--text-secondary); }
+  .diagram .comp { fill: none; stroke: var(--text-secondary); stroke-width: 1.5; rx: 8; }
+  .diagram .res  { fill: var(--surface-1); stroke: var(--text-primary); stroke-width: 1.5; }
+  .diagram .wire { fill: none; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+  .diagram .dot  { stroke: none; }
+
+  .legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: 0.78rem; color: var(--text-secondary); margin: 6px 4px; }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .legend i { width: 18px; height: 4px; border-radius: 2px; display: inline-block; }
+
+  .codeblock { position: relative; margin: 14px 0; }
+  .codeblock pre {
+    background: var(--code-bg); border: 1px solid var(--border); border-radius: 10px;
+    padding: 14px; overflow-x: auto; font-size: 0.78rem; line-height: 1.5;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    color: var(--text-primary);
+    max-height: 480px; overflow-y: auto;
+  }
+  .codeblock button {
+    position: absolute; top: 8px; right: 8px;
+    font: inherit; font-size: 0.75rem; font-weight: 600;
+    background: var(--surface-1); color: var(--text-secondary);
+    border: 1px solid var(--border); border-radius: 8px;
+    padding: 5px 12px; cursor: pointer;
+  }
+  .codeblock button:hover { color: var(--text-primary); }
+
+  .steps { counter-reset: paso; margin: 10px 0; }
+  .steps > div {
+    display: flex; gap: 12px; margin-bottom: 10px;
+    counter-increment: paso; font-size: 0.9rem; color: var(--text-secondary);
+  }
+  .steps > div::before {
+    content: counter(paso);
+    background: var(--code-bg); border: 1px solid var(--border);
+    color: var(--text-primary); font-weight: 650; font-size: 0.8rem;
+    width: 24px; height: 24px; border-radius: 50%; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  footer { margin-top: 40px; color: var(--text-muted); font-size: 0.75rem; }
+  footer a { color: var(--accent); }
+</style>
+</head>
+<body>
+
+<header>
+  <svg class="ic" viewBox="0 0 24 24"><path d="M12 3C12 3 6 10 6 14a6 6 0 0 0 12 0C18 10 12 3 12 3Z"/></svg>
+  <h1>Guía de montaje electrónico</h1>
+</header>
+<p class="subtitle">Monitor hidroponía · ESP32 · conexiones paso a paso sin necesidad de multímetro · <a href="index.html">← volver al dashboard</a></p>
+
+<nav class="toc">
+  <ol>
+    <li><a href="#materiales">Qué necesitas</a></li>
+    <li><a href="#protoboard">Cómo funciona tu protoboard</a></li>
+    <li><a href="#alimentacion">Alimentación (12 V)</a></li>
+    <li><a href="#niveles">Sensores de nivel XKC-Y25 (×5)</a></li>
+    <li><a href="#temperatura">Sensor de temperatura DS18B20</a></li>
+    <li><a href="#tds">Sensor TDS/EC</a></li>
+    <li><a href="#rele">Relé, bomba y diodo</a></li>
+    <li><a href="#resumen">Tabla resumen de todas las conexiones</a></li>
+    <li><a href="#checklist">Checklist antes de enchufar</a></li>
+    <li><a href="#test">Paso 1: sketch de prueba (el ESP32 como comprobador)</a></li>
+    <li><a href="#firmware">Paso 2: firmware definitivo</a></li>
+  </ol>
+</nav>
+
+<div class="warn">
+  <svg class="ic" viewBox="0 0 24 24"><path d="M12 4 21 19H3L12 4Z"/><path d="M12 10v4.5"/><circle cx="12" cy="16.8" r="0.5" fill="currentColor" stroke="none"/></svg>
+  <div><strong>Reglas de oro (léelas antes de nada):</strong>
+    <ul>
+      <li>Monta y revisa <strong>todo con la fuente desenchufada y el USB desconectado</strong>. Solo se enchufa al final, tras el checklist.</li>
+      <li><strong>El 12 V nunca toca la protoboard ni ningún pin del ESP32.</strong> El 12 V solo va al jack de la placa de extensión y al circuito de la bomba.</li>
+      <li>Los pines del ESP32 solo aguantan <strong>3.3 V</strong>. Por eso las señales de los sensores (que trabajan a 5 V) pasan siempre por un divisor de resistencias.</li>
+      <li>Cada cable de color de esta guía lleva además su etiqueta de texto: fíate de la etiqueta, no solo del color.</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ============================================================ MATERIALES -->
+<section id="materiales">
+  <h2><span class="num">1</span>Qué necesitas</h2>
+  <div class="table-scroll"><table>
+    <thead><tr><th>Componente</th><th>Cantidad</th><th>Para qué</th></tr></thead>
+    <tbody>
+      <tr><td>ESP32-WROOM-32 DevKit + placa de extensión con jack</td><td>1</td><td>El cerebro; la extensión da 5 V / 3.3 V y entrada de alimentación</td></tr>
+      <tr><td>Protoboard 60 filas × 12 columnas</td><td>1</td><td>Divisores de las señales y carriles de 5 V / GND</td></tr>
+      <tr><td>Sensor de nivel XKC-Y25</td><td>5</td><td>2 en depósito principal, 3 en auxiliar</td></tr>
+      <tr><td>Sonda DS18B20 impermeable</td><td>1</td><td>Temperatura del agua</td></tr>
+      <tr><td>Módulo TDS Meter V1.0 + sonda</td><td>1</td><td>Conductividad (EC) / TDS</td></tr>
+      <tr><td>Módulo de relé 1 canal (VCC-GND-IN)</td><td>1</td><td>Encender/apagar la bomba</td></tr>
+      <tr><td>Bomba 12 V DC (3–5 W)</td><td>1</td><td>Trasvase auxiliar → principal</td></tr>
+      <tr><td>Diodo HER208</td><td>1</td><td>Protección contra el chispazo de la bomba al apagarse</td></tr>
+      <tr><td>Resistencias de 10 kΩ</td><td>12</td><td>10 para los divisores de nivel + 2 para el DS18B20</td></tr>
+      <tr><td>Fuente 12 V (jack) + fusible + interruptor</td><td>1</td><td>Alimentación única de todo el sistema</td></tr>
+      <tr><td>Cables dupont (macho-macho y macho-hembra)</td><td>~25</td><td>Conexiones placa ↔ protoboard ↔ módulos</td></tr>
+    </tbody>
+  </table></div>
+  <div class="infobox">
+    <svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 11v5"/><circle cx="12" cy="8" r="0.5" fill="currentColor" stroke="none"/></svg>
+    <div>Los XKC-Y25 suelen venir con los cables acabados en punta pelada o conector. Si son punta pelada y no entran firmes en la protoboard, retuércelos bien o únelos a un dupont macho (retorcer + cinta aislante sirve; mejor si puedes soldar o usar clemas).</div>
+  </div>
+</section>
+
+<!-- ============================================================ PROTOBOARD -->
+<section id="protoboard">
+  <h2><span class="num">2</span>Cómo funciona tu protoboard</h2>
+  <p>Tu protoboard tiene 60 filas y 12 columnas, y las conexiones internas (invisibles) funcionan así:</p>
+  <ul>
+    <li><strong>Columna 1</strong> (borde izquierdo): todos sus agujeros están unidos entre sí de arriba abajo. La usaremos como <strong>carril GND</strong> (negativo común).</li>
+    <li><strong>Columna 12</strong> (borde derecho): igual, todos unidos. Será el <strong>carril de 5 V</strong>.</li>
+    <li><strong>Columnas 2–6</strong>: en cada fila, esos 5 agujeros están unidos entre sí (media fila izquierda).</li>
+    <li><strong>Columnas 7–11</strong>: lo mismo, media fila derecha. <strong>La mitad izquierda y la derecha de una fila NO están conectadas entre sí.</strong></li>
+  </ul>
+  <div class="diagram">
+    <svg viewBox="0 0 640 210" role="img" aria-label="Esquema de conexiones internas de la protoboard">
+      <text x="20" y="20" class="lbl2">columna:  1        2     3     4     5     6        7     8     9    10    11        12</text>
+      <!-- carril GND col1 -->
+      <rect x="24" y="30" width="26" height="150" rx="6" fill="none" stroke="var(--w-gnd)" stroke-width="2"/>
+      <text x="37" y="196" class="lbl2" text-anchor="middle">GND</text>
+      <!-- carril 5V col12 -->
+      <rect x="560" y="30" width="26" height="150" rx="6" fill="none" stroke="var(--w-5v)" stroke-width="2"/>
+      <text x="573" y="196" class="lbl2" text-anchor="middle">5 V</text>
+      <!-- filas -->
+      <g>
+        <rect x="80" y="34" width="215" height="20" rx="5" fill="none" stroke="var(--accent)" stroke-width="1.6"/>
+        <rect x="320" y="34" width="215" height="20" rx="5" fill="none" stroke="var(--accent)" stroke-width="1.6" stroke-dasharray="4 3"/>
+        <text x="187" y="27" class="lbl2" text-anchor="middle">mitad izquierda: unida entre sí</text>
+        <text x="427" y="27" class="lbl2" text-anchor="middle">mitad derecha: unida entre sí (aparte)</text>
+      </g>
+      <g fill="var(--text-muted)">
+        <circle cx="37" cy="44" r="3"/><circle cx="37" cy="74" r="3"/><circle cx="37" cy="104" r="3"/><circle cx="37" cy="134" r="3"/><circle cx="37" cy="164" r="3"/>
+        <circle cx="573" cy="44" r="3"/><circle cx="573" cy="74" r="3"/><circle cx="573" cy="104" r="3"/><circle cx="573" cy="134" r="3"/><circle cx="573" cy="164" r="3"/>
+        <circle cx="100" cy="44" r="3"/><circle cx="145" cy="44" r="3"/><circle cx="190" cy="44" r="3"/><circle cx="235" cy="44" r="3"/><circle cx="280" cy="44" r="3"/>
+        <circle cx="340" cy="44" r="3"/><circle cx="385" cy="44" r="3"/><circle cx="430" cy="44" r="3"/><circle cx="475" cy="44" r="3"/><circle cx="520" cy="44" r="3"/>
+        <circle cx="100" cy="74" r="3"/><circle cx="145" cy="74" r="3"/><circle cx="190" cy="74" r="3"/><circle cx="235" cy="74" r="3"/><circle cx="280" cy="74" r="3"/>
+        <circle cx="340" cy="74" r="3"/><circle cx="385" cy="74" r="3"/><circle cx="430" cy="74" r="3"/><circle cx="475" cy="74" r="3"/><circle cx="520" cy="74" r="3"/>
+        <circle cx="100" cy="104" r="3"/><circle cx="145" cy="104" r="3"/><circle cx="190" cy="104" r="3"/><circle cx="235" cy="104" r="3"/><circle cx="280" cy="104" r="3"/>
+        <circle cx="340" cy="104" r="3"/><circle cx="385" cy="104" r="3"/><circle cx="430" cy="104" r="3"/><circle cx="475" cy="104" r="3"/><circle cx="520" cy="104" r="3"/>
+        <circle cx="100" cy="134" r="3"/><circle cx="145" cy="134" r="3"/><circle cx="190" cy="134" r="3"/><circle cx="235" cy="134" r="3"/><circle cx="280" cy="134" r="3"/>
+        <circle cx="340" cy="134" r="3"/><circle cx="385" cy="134" r="3"/><circle cx="430" cy="134" r="3"/><circle cx="475" cy="134" r="3"/><circle cx="520" cy="134" r="3"/>
+        <circle cx="100" cy="164" r="3"/><circle cx="145" cy="164" r="3"/><circle cx="190" cy="164" r="3"/><circle cx="235" cy="164" r="3"/><circle cx="280" cy="164" r="3"/>
+        <circle cx="340" cy="164" r="3"/><circle cx="385" cy="164" r="3"/><circle cx="430" cy="164" r="3"/><circle cx="475" cy="164" r="3"/><circle cx="520" cy="164" r="3"/>
+      </g>
+      <text x="60" y="48" class="lbl2">f.1</text>
+      <text x="60" y="78" class="lbl2">f.2</text>
+      <text x="60" y="108" class="lbl2">f.3</text>
+      <text x="60" y="138" class="lbl2">f.4</text>
+      <text x="60" y="168" class="lbl2">f.5</text>
+    </svg>
+  </div>
+  <p><strong>Prepara los carriles</strong> (2 cables, con todo desenchufado):</p>
+  <ul>
+    <li>Cable <strong>negro</strong>: de un pin <code>GND</code> de la placa de extensión → cualquier agujero de la <strong>columna 1</strong>.</li>
+    <li>Cable <strong>rojo</strong>: del pin <code>5V</code> (a veces marcado <code>VIN</code> o <code>V5</code>) de la extensión → cualquier agujero de la <strong>columna 12</strong>.</li>
+  </ul>
+</section>
+
+<!-- ============================================================ ALIMENTACION -->
+<section id="alimentacion">
+  <h2><span class="num">3</span>Alimentación (12 V)</h2>
+  <p>Una sola fuente de 12 V alimenta todo: el ESP32 (a través del jack de la extensión, que lo convierte a 5 V y 3.3 V) y la bomba (a través del relé). El fusible y el interruptor van en el cable positivo, antes de repartir.</p>
+
+  <div class="legend">
+    <span><i style="background:var(--w-12v)"></i>12 V</span>
+    <span><i style="background:var(--w-gnd)"></i>GND / negativo</span>
+  </div>
+  <div class="diagram">
+    <svg viewBox="0 0 720 240" role="img" aria-label="Esquema de alimentación">
+      <rect x="15" y="80" width="95" height="70" rx="8" class="comp"/>
+      <text x="62" y="108" class="lbl" text-anchor="middle">Fuente</text>
+      <text x="62" y="126" class="lbl" text-anchor="middle">12 V</text>
+      <!-- + line -->
+      <path d="M110 95 H150" class="wire" stroke="var(--w-12v)"/>
+      <rect x="150" y="85" width="60" height="20" rx="4" class="res"/>
+      <text x="180" y="99" class="lbl2" text-anchor="middle">fusible</text>
+      <path d="M210 95 H250" class="wire" stroke="var(--w-12v)"/>
+      <rect x="250" y="85" width="80" height="20" rx="4" class="res"/>
+      <text x="290" y="99" class="lbl2" text-anchor="middle">interruptor</text>
+      <path d="M330 95 H400" class="wire" stroke="var(--w-12v)"/>
+      <circle cx="400" cy="95" r="4" fill="var(--w-12v)" class="dot"/>
+      <text x="400" y="82" class="lbl2" text-anchor="middle">se reparte en 2</text>
+      <!-- branch 1: jack -->
+      <path d="M400 95 H470 V60 H520" class="wire" stroke="var(--w-12v)"/>
+      <rect x="520" y="30" width="180" height="60" rx="8" class="comp"/>
+      <text x="610" y="55" class="lbl" text-anchor="middle">Jack de la placa de</text>
+      <text x="610" y="72" class="lbl" text-anchor="middle">extensión (+ al centro)</text>
+      <!-- branch 2: rele COM -->
+      <path d="M400 95 H470 V160 H520" class="wire" stroke="var(--w-12v)"/>
+      <rect x="520" y="130" width="180" height="60" rx="8" class="comp"/>
+      <text x="610" y="155" class="lbl" text-anchor="middle">Relé, borne COM</text>
+      <text x="610" y="172" class="lbl2" text-anchor="middle">(sección 7)</text>
+      <!-- GND -->
+      <path d="M110 135 H455 V210 H610 V190" class="wire" stroke="var(--w-gnd)"/>
+      <path d="M455 210 V225" class="wire" stroke="var(--w-gnd)"/>
+      <text x="240" y="128" class="lbl2">negativo (GND) común a todo el sistema</text>
+      <text x="470" y="223" class="lbl2">al negativo de la bomba (sección 7)</text>
+    </svg>
+  </div>
+
+  <div class="warn">
+    <svg class="ic" viewBox="0 0 24 24"><path d="M12 4 21 19H3L12 4Z"/><path d="M12 10v4.5"/><circle cx="12" cy="16.8" r="0.5" fill="currentColor" stroke="none"/></svg>
+    <div><strong>Comprueba la serigrafía de tu placa de extensión antes de enchufar 12 V al jack.</strong> Debe indicar un rango tipo <code>DC 6.5–15V</code> o <code>7–12V</code> junto al conector. Si solo pone <code>5V</code>, NO le enchufes 12 V: intercala tu módulo buck (12 V → 5 V) entre la fuente y la placa, y alimenta por el pin 5V/VIN. Si tienes dudas, mándame una foto de la serigrafía y te lo confirmo.</div>
+  </div>
+  <div class="infobox">
+    <svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 11v5"/><circle cx="12" cy="8" r="0.5" fill="currentColor" stroke="none"/></svg>
+    <div><strong>Mientras montas y pruebas, no uses la fuente:</strong> alimenta el ESP32 solo por USB. El 12 V únicamente hace falta para la prueba final de la bomba. Nunca conectes USB y fuente a la vez si tu extensión no lo permite (muchas sí lo permiten, pero si no está claro, usa solo uno cada vez).</div>
+  </div>
+</section>
+
+<!-- ============================================================ NIVELES -->
+<section id="niveles">
+  <h2><span class="num">4</span>Sensores de nivel XKC-Y25 (×5)</h2>
+  <p>Cada sensor tiene 4 cables: <strong>rojo/rosa</strong> (alimentación +), <strong>negro</strong> (GND), <strong>amarillo</strong> (señal) y <strong>azul</strong> (modo — <strong>no se conecta</strong>: aísla su punta con cinta para que no toque nada).</p>
+  <p>El sensor se alimenta a 5 V, así que su señal puede sacar hasta 5 V — demasiado para el ESP32. La solución: un <strong>divisor de tensión</strong> con dos resistencias de 10 kΩ que deja la señal en ~2.5 V, suficiente para que el ESP32 la lea como "1" sin dañarse. Son 2 resistencias por sensor, 10 en total.</p>
+
+  <div class="legend">
+    <span><i style="background:var(--w-5v)"></i>5 V</span>
+    <span><i style="background:var(--w-gnd)"></i>GND</span>
+    <span><i style="background:var(--w-sig)"></i>señal (amarillo)</span>
+    <span><i style="background:var(--w-gpio)"></i>hacia pin GPIO</span>
+    <span><i style="background:var(--w-azul)"></i>azul: aislar, no conectar</span>
+  </div>
+  <div class="diagram">
+    <svg viewBox="0 0 720 260" role="img" aria-label="Divisor de tensión de un sensor de nivel">
+      <rect x="15" y="70" width="120" height="110" rx="8" class="comp"/>
+      <text x="75" y="100" class="lbl" text-anchor="middle">XKC-Y25</text>
+      <text x="75" y="118" class="lbl2" text-anchor="middle">(pegado al</text>
+      <text x="75" y="133" class="lbl2" text-anchor="middle">depósito)</text>
+      <!-- rojo -->
+      <path d="M135 85 H620 V60" class="wire" stroke="var(--w-5v)"/>
+      <text x="330" y="79" class="lbl2">rojo/rosa → carril 5 V (columna 12)</text>
+      <rect x="595" y="30" width="50" height="30" rx="5" fill="none" stroke="var(--w-5v)" stroke-width="1.6"/>
+      <text x="620" y="50" class="lbl2" text-anchor="middle">5 V</text>
+      <!-- negro -->
+      <path d="M135 165 H180 V225 H620" class="wire" stroke="var(--w-gnd)"/>
+      <text x="330" y="219" class="lbl2">negro → carril GND (columna 1)</text>
+      <rect x="620" y="210" width="50" height="30" rx="5" fill="none" stroke="var(--w-gnd)" stroke-width="1.6"/>
+      <text x="645" y="230" class="lbl2" text-anchor="middle">GND</text>
+      <!-- azul -->
+      <path d="M135 140 H190" class="wire" stroke="var(--w-azul)" stroke-dasharray="5 4"/>
+      <text x="200" y="144" class="lbl2">azul: punta con cinta aislante, al aire</text>
+      <!-- amarillo -->
+      <path d="M135 115 H260" class="wire" stroke="var(--w-sig)"/>
+      <text x="150" y="109" class="lbl2">amarillo</text>
+      <!-- R superior -->
+      <rect x="260" y="103" width="80" height="24" rx="4" class="res"/>
+      <text x="300" y="120" class="lbl2" text-anchor="middle">10 kΩ</text>
+      <path d="M340 115 H430" class="wire" stroke="var(--w-sig)"/>
+      <circle cx="430" cy="115" r="4" fill="var(--w-sig)" class="dot"/>
+      <text x="430" y="100" class="lbl2" text-anchor="middle">punto medio</text>
+      <!-- R inferior -->
+      <path d="M430 115 V150" class="wire" stroke="var(--w-sig)"/>
+      <rect x="418" y="150" width="24" height="55" rx="4" class="res"/>
+      <text x="454" y="182" class="lbl2">10 kΩ</text>
+      <path d="M430 205 V225" class="wire" stroke="var(--w-gnd)"/>
+      <!-- GPIO -->
+      <path d="M430 115 H560" class="wire" stroke="var(--w-gpio)"/>
+      <rect x="560" y="100" width="120" height="30" rx="5" fill="none" stroke="var(--w-gpio)" stroke-width="1.6"/>
+      <text x="620" y="120" class="lbl" text-anchor="middle">GPIO del ESP32</text>
+    </svg>
+  </div>
+
+  <h3>Colocación en la protoboard (mitad izquierda, columnas 2–6)</h3>
+  <p>El patrón es idéntico para los 5 sensores, cada uno en su bloque de 3 filas. Dentro de una misma fila da igual qué agujero de la mitad uses (están unidos):</p>
+  <ul>
+    <li><strong>Fila A</strong>: cable <strong>amarillo</strong> del sensor + una pata de la <strong>resistencia R1</strong>.</li>
+    <li><strong>Fila B</strong> (la siguiente): la otra pata de <strong>R1</strong> + una pata de <strong>R2</strong> + cable <strong>verde</strong> hacia el pin GPIO de la placa.</li>
+    <li><strong>Fila C</strong>: la otra pata de <strong>R2</strong> + cable corto a la <strong>columna 1 (GND)</strong>.</li>
+    <li>Además: <strong>rojo/rosa</strong> del sensor → columna 12 (5 V) y <strong>negro</strong> → columna 1 (GND), en cualquier agujero libre de esos carriles.</li>
+  </ul>
+  <div class="table-scroll"><table>
+    <thead><tr><th>Sensor</th><th>Depósito y posición</th><th>Filas protoboard (A·B·C)</th><th>Pin GPIO</th></tr></thead>
+    <tbody>
+      <tr><td>Nivel 1</td><td>Principal · alto (para el llenado)</td><td>1 · 2 · 3</td><td><code>GPIO32</code></td></tr>
+      <tr><td>Nivel 2</td><td>Principal · bajo (arranca el llenado)</td><td>5 · 6 · 7</td><td><code>GPIO33</code></td></tr>
+      <tr><td>Nivel 3</td><td>Auxiliar · medio-alto</td><td>9 · 10 · 11</td><td><code>GPIO34</code></td></tr>
+      <tr><td>Nivel 4</td><td>Auxiliar · medio</td><td>13 · 14 · 15</td><td><code>GPIO36</code> (a veces rotulado <code>VP</code>)</td></tr>
+      <tr><td>Nivel 5</td><td>Auxiliar · bajo (corta la bomba)</td><td>17 · 18 · 19</td><td><code>GPIO39</code> (a veces rotulado <code>VN</code>)</td></tr>
+    </tbody>
+  </table></div>
+  <div class="okbox">
+    <svg class="ic" viewBox="0 0 24 24"><path d="M5 13l4 4 10-11"/></svg>
+    <div><strong>Apunta qué sensor va a qué depósito</strong> (una pegatina en cada cable ayuda). Confundir el "auxiliar bajo" con otro anula la protección de marcha en seco.</div>
+  </div>
+</section>
+
+<!-- ============================================================ DS18B20 -->
+<section id="temperatura">
+  <h2><span class="num">5</span>Sensor de temperatura DS18B20</h2>
+  <p>La sonda tiene 3 cables: <strong>rojo</strong> (+), <strong>negro</strong> (GND) y <strong>amarillo o blanco</strong> (datos). Se alimenta a <strong>3.3 V</strong> (no a 5 V) y su línea de datos necesita una resistencia "pull-up" de ~5 kΩ hacia 3.3 V. Como no tienes de 4.7 kΩ, usamos <strong>dos de 10 kΩ en paralelo</strong> (juntas equivalen a 5 kΩ, perfecto).</p>
+
+  <div class="legend">
+    <span><i style="background:var(--w-3v3)"></i>3.3 V</span>
+    <span><i style="background:var(--w-gnd)"></i>GND</span>
+    <span><i style="background:var(--w-sig)"></i>datos</span>
+    <span><i style="background:var(--w-gpio)"></i>hacia GPIO4</span>
+  </div>
+  <div class="diagram">
+    <svg viewBox="0 0 720 230" role="img" aria-label="Conexión del DS18B20 con pull-up de dos resistencias en paralelo">
+      <rect x="15" y="60" width="120" height="110" rx="8" class="comp"/>
+      <text x="75" y="92" class="lbl" text-anchor="middle">DS18B20</text>
+      <text x="75" y="110" class="lbl2" text-anchor="middle">(sonda metálica</text>
+      <text x="75" y="125" class="lbl2" text-anchor="middle">dentro del agua)</text>
+      <!-- rojo 3V3 -->
+      <path d="M135 80 H430 V55 H560" class="wire" stroke="var(--w-3v3)"/>
+      <text x="240" y="74" class="lbl2">rojo → pin 3V3 de la placa</text>
+      <rect x="560" y="40" width="70" height="30" rx="5" fill="none" stroke="var(--w-3v3)" stroke-width="1.6"/>
+      <text x="595" y="60" class="lbl2" text-anchor="middle">3V3</text>
+      <!-- datos -->
+      <path d="M135 115 H330" class="wire" stroke="var(--w-sig)"/>
+      <text x="180" y="109" class="lbl2">datos (amarillo/blanco)</text>
+      <circle cx="330" cy="115" r="4" fill="var(--w-sig)" class="dot"/>
+      <path d="M330 115 H560" class="wire" stroke="var(--w-gpio)"/>
+      <rect x="560" y="100" width="100" height="30" rx="5" fill="none" stroke="var(--w-gpio)" stroke-width="1.6"/>
+      <text x="610" y="120" class="lbl" text-anchor="middle">GPIO4</text>
+      <!-- pullups: dos resistencias en paralelo entre 3V3 (y=80 wire at x 380/410) y datos -->
+      <path d="M370 80 V88" class="wire" stroke="var(--w-3v3)"/>
+      <rect x="358" y="88" width="24" height="20" rx="4" class="res"/>
+      <path d="M370 108 V115" class="wire" stroke="var(--w-sig)"/>
+      <path d="M410 80 V88" class="wire" stroke="var(--w-3v3)"/>
+      <rect x="398" y="88" width="24" height="20" rx="4" class="res"/>
+      <path d="M410 108 V115" class="wire" stroke="var(--w-sig)"/>
+      <circle cx="370" cy="80" r="3.5" fill="var(--w-3v3)" class="dot"/>
+      <circle cx="410" cy="80" r="3.5" fill="var(--w-3v3)" class="dot"/>
+      <circle cx="370" cy="115" r="3.5" fill="var(--w-sig)" class="dot"/>
+      <circle cx="410" cy="115" r="3.5" fill="var(--w-sig)" class="dot"/>
+      <text x="390" y="135" class="lbl2" text-anchor="middle">2 × 10 kΩ</text>
+      <text x="390" y="150" class="lbl2" text-anchor="middle">en paralelo (≈5 kΩ)</text>
+      <!-- gnd -->
+      <path d="M135 150 H330 V195 H560" class="wire" stroke="var(--w-gnd)"/>
+      <text x="180" y="144" class="lbl2">negro → carril GND</text>
+      <rect x="560" y="180" width="70" height="30" rx="5" fill="none" stroke="var(--w-gnd)" stroke-width="1.6"/>
+      <text x="595" y="200" class="lbl2" text-anchor="middle">GND</text>
+    </svg>
+  </div>
+
+  <h3>Colocación en la protoboard (filas 24–26, mitad izquierda)</h3>
+  <ul>
+    <li><strong>Fila 24</strong>: cable desde el pin <code>3V3</code> de la placa + cable <strong>rojo</strong> de la sonda + una pata de cada resistencia (las dos).</li>
+    <li><strong>Fila 25</strong>: cable de <strong>datos</strong> de la sonda + las otras dos patas de las resistencias + cable verde a <code>GPIO4</code>.</li>
+    <li><strong>Fila 26</strong>: cable <strong>negro</strong> de la sonda + cable corto a la columna 1 (GND).</li>
+  </ul>
+  <div class="warn">
+    <svg class="ic" viewBox="0 0 24 24"><path d="M12 4 21 19H3L12 4Z"/><path d="M12 10v4.5"/><circle cx="12" cy="16.8" r="0.5" fill="currentColor" stroke="none"/></svg>
+    <div>El rojo del DS18B20 va a <strong>3V3</strong>, no al carril de 5 V. Es la única alimentación a 3.3 V de todo el montaje: no la mezcles con el carril de la columna 12.</div>
+  </div>
+</section>
+
+<!-- ============================================================ TDS -->
+<section id="tds">
+  <h2><span class="num">6</span>Sensor TDS/EC</h2>
+  <p>El módulo TDS no debe estar alimentado en continuo (la sonda se degrada por electrólisis). Truco: su consumo es tan bajo que lo alimentamos <strong>directamente desde un pin del ESP32</strong> (<code>GPIO25</code>), y el firmware solo lo enciende ~1 segundo en cada lectura. Al alimentarlo a 3.3 V, su salida analógica nunca supera los 3.3 V: segura sin divisor.</p>
+  <div class="legend">
+    <span><i style="background:var(--w-gpio)"></i>GPIO (alimentación conmutada y señal)</span>
+    <span><i style="background:var(--w-gnd)"></i>GND</span>
+  </div>
+  <div class="diagram">
+    <svg viewBox="0 0 720 190" role="img" aria-label="Conexión del módulo TDS">
+      <rect x="15" y="45" width="150" height="110" rx="8" class="comp"/>
+      <text x="90" y="75" class="lbl" text-anchor="middle">Módulo TDS V1.0</text>
+      <text x="90" y="93" class="lbl2" text-anchor="middle">(la sonda se enchufa</text>
+      <text x="90" y="108" class="lbl2" text-anchor="middle">al módulo, conector</text>
+      <text x="90" y="123" class="lbl2" text-anchor="middle">propio)</text>
+      <path d="M165 70 H540" class="wire" stroke="var(--w-gpio)"/>
+      <text x="300" y="64" class="lbl2">VCC (+) → GPIO25   ·   el firmware lo enciende solo al medir</text>
+      <rect x="540" y="55" width="110" height="30" rx="5" fill="none" stroke="var(--w-gpio)" stroke-width="1.6"/>
+      <text x="595" y="75" class="lbl" text-anchor="middle">GPIO25</text>
+      <path d="M165 105 H540" class="wire" stroke="var(--w-gpio)"/>
+      <text x="300" y="99" class="lbl2">A (salida analógica) → GPIO35</text>
+      <rect x="540" y="90" width="110" height="30" rx="5" fill="none" stroke="var(--w-gpio)" stroke-width="1.6"/>
+      <text x="595" y="110" class="lbl" text-anchor="middle">GPIO35</text>
+      <path d="M165 140 H540" class="wire" stroke="var(--w-gnd)"/>
+      <text x="300" y="134" class="lbl2">GND (−) → carril GND</text>
+      <rect x="540" y="125" width="110" height="30" rx="5" fill="none" stroke="var(--w-gnd)" stroke-width="1.6"/>
+      <text x="595" y="145" class="lbl2" text-anchor="middle">GND</text>
+    </svg>
+  </div>
+  <p>Estas tres conexiones pueden ir con cables dupont directos de la placa al módulo, sin pasar por la protoboard. Si tu módulo trae el cablecillo de 3 hilos, respeta el orden que marque su serigrafía (<code>+</code>, <code>-</code>, <code>A</code>).</p>
+</section>
+
+<!-- ============================================================ RELE -->
+<section id="rele">
+  <h2><span class="num">7</span>Relé, bomba y diodo de protección</h2>
+  <p>El módulo de relé tiene dos zonas: los <strong>3 pines de control</strong> (VCC, GND, IN — van al ESP32) y el <strong>bornero de contactos</strong> (COM, NO, NC — por ahí pasa el 12 V de la bomba). Son circuitos separados: el 12 V no toca el lado de control.</p>
+  <div class="legend">
+    <span><i style="background:var(--w-5v)"></i>5 V</span>
+    <span><i style="background:var(--w-gnd)"></i>GND</span>
+    <span><i style="background:var(--w-gpio)"></i>señal GPIO</span>
+    <span><i style="background:var(--w-12v)"></i>12 V</span>
+  </div>
+  <div class="diagram">
+    <svg viewBox="0 0 720 300" role="img" aria-label="Conexión del relé, la bomba y el diodo">
+      <!-- ESP32 -->
+      <rect x="15" y="40" width="130" height="120" rx="8" class="comp"/>
+      <text x="80" y="70" class="lbl" text-anchor="middle">Placa ESP32</text>
+      <text x="80" y="86" class="lbl2" text-anchor="middle">(extensión)</text>
+      <!-- Rele -->
+      <rect x="290" y="30" width="170" height="150" rx="8" class="comp"/>
+      <text x="375" y="55" class="lbl" text-anchor="middle">Módulo relé 1 canal</text>
+      <text x="305" y="82" class="lbl2">VCC</text>
+      <text x="305" y="112" class="lbl2">GND</text>
+      <text x="305" y="142" class="lbl2">IN</text>
+      <text x="415" y="82" class="lbl2">COM</text>
+      <text x="415" y="112" class="lbl2">NO</text>
+      <text x="415" y="142" class="lbl2">NC (no usar)</text>
+      <!-- control -->
+      <path d="M145 75 H300" class="wire" stroke="var(--w-5v)"/>
+      <text x="180" y="69" class="lbl2">5 V</text>
+      <path d="M145 105 H300" class="wire" stroke="var(--w-gnd)"/>
+      <text x="180" y="99" class="lbl2">GND</text>
+      <path d="M145 135 H300" class="wire" stroke="var(--w-gpio)"/>
+      <text x="180" y="129" class="lbl2">GPIO26</text>
+      <!-- 12V -->
+      <path d="M540 20 V75 H445" class="wire" stroke="var(--w-12v)"/>
+      <text x="548" y="30" class="lbl2">+12 V (tras fusible e interruptor)</text>
+      <path d="M445 105 H540 V150" class="wire" stroke="var(--w-12v)"/>
+      <text x="475" y="99" class="lbl2">NO → bomba +</text>
+      <!-- bomba -->
+      <rect x="490" y="150" width="100" height="80" rx="8" class="comp"/>
+      <text x="540" y="185" class="lbl" text-anchor="middle">Bomba</text>
+      <text x="540" y="203" class="lbl2" text-anchor="middle">12 V DC</text>
+      <path d="M540 230 V265 H100" class="wire" stroke="var(--w-gnd)"/>
+      <text x="240" y="259" class="lbl2">bomba − → negativo de la fuente (GND común)</text>
+      <!-- diodo en paralelo -->
+      <path d="M620 150 V120 H540" class="wire" stroke="var(--w-12v)" stroke-width="1.8"/>
+      <path d="M620 230 V186" class="wire" stroke="var(--w-gnd)" stroke-width="1.8"/>
+      <circle cx="540" cy="150" r="3.5" fill="var(--w-12v)" class="dot"/>
+      <circle cx="540" cy="230" r="3.5" fill="var(--w-gnd)" class="dot"/>
+      <!-- diode symbol: triangle pointing up + bar at top (cathode toward +) -->
+      <path d="M610 186 H630 L620 166 Z" fill="none" stroke="var(--text-primary)" stroke-width="1.6"/>
+      <path d="M610 164 H630" stroke="var(--text-primary)" stroke-width="2.4"/>
+      <text x="643" y="172" class="lbl2">HER208</text>
+      <text x="643" y="188" class="lbl2">banda gris</text>
+      <text x="643" y="203" class="lbl2">hacia el +</text>
+    </svg>
+  </div>
+  <ul>
+    <li><strong>Control</strong> (dupont, sin protoboard): <code>VCC</code> → pin 5V de la placa (o carril 5 V), <code>GND</code> → GND, <code>IN</code> → <code>GPIO26</code>.</li>
+    <li><strong>Contactos</strong> (cable un poco más grueso si puedes, atornillado al bornero): el <strong>+12 V</strong> (después del fusible y el interruptor) entra en <code>COM</code>; de <code>NO</code> sale al <strong>positivo de la bomba</strong>; el <strong>negativo de la bomba</strong> vuelve directo al negativo de la fuente. <code>NC</code> se queda vacío.</li>
+    <li><strong>Diodo HER208</strong>: en paralelo con la bomba, lo más cerca posible de ella. <strong>La banda gris del diodo apunta al cable positivo</strong> de la bomba. Si lo pones al revés hará cortocircuito en cuanto el relé cierre — revísalo dos veces.</li>
+    <li>Usar <code>NO</code> (normalmente abierto) garantiza que la bomba está <strong>parada</strong> cuando el sistema está apagado o arrancando.</li>
+  </ul>
+  <div class="infobox">
+    <svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 11v5"/><circle cx="12" cy="8" r="0.5" fill="currentColor" stroke="none"/></svg>
+    <div>La mayoría de estos módulos son "activos a nivel bajo" (el relé cierra cuando IN se pone a 0). El firmware ya lo asume (<code>RELE_ACTIVO_BAJO 1</code>). Si al probar ves el comportamiento invertido (bomba en marcha cuando debería estar parada), cambia ese valor a <code>0</code> y recarga.</div>
+  </div>
+</section>
+
+<!-- ============================================================ RESUMEN -->
+<section id="resumen">
+  <h2><span class="num">8</span>Tabla resumen de todas las conexiones</h2>
+  <div class="table-scroll"><table>
+    <thead><tr><th>Desde</th><th>Hasta</th><th>Vía</th></tr></thead>
+    <tbody>
+      <tr><td>Placa · pin <code>GND</code></td><td>Columna 1 (carril GND)</td><td>dupont negro</td></tr>
+      <tr><td>Placa · pin <code>5V</code></td><td>Columna 12 (carril 5 V)</td><td>dupont rojo</td></tr>
+      <tr><td>XKC-Y25 ×5 · rojo/rosa</td><td>Columna 12 (5 V)</td><td>directo al carril</td></tr>
+      <tr><td>XKC-Y25 ×5 · negro</td><td>Columna 1 (GND)</td><td>directo al carril</td></tr>
+      <tr><td>XKC-Y25 ×5 · azul</td><td>— (aislado con cinta)</td><td>—</td></tr>
+      <tr><td>XKC-Y25 · amarillo (ppal alto)</td><td><code>GPIO32</code></td><td>divisor 10k+10k, filas 1–3</td></tr>
+      <tr><td>XKC-Y25 · amarillo (ppal bajo)</td><td><code>GPIO33</code></td><td>divisor 10k+10k, filas 5–7</td></tr>
+      <tr><td>XKC-Y25 · amarillo (aux medio-alto)</td><td><code>GPIO34</code></td><td>divisor 10k+10k, filas 9–11</td></tr>
+      <tr><td>XKC-Y25 · amarillo (aux medio)</td><td><code>GPIO36</code> / VP</td><td>divisor 10k+10k, filas 13–15</td></tr>
+      <tr><td>XKC-Y25 · amarillo (aux bajo)</td><td><code>GPIO39</code> / VN</td><td>divisor 10k+10k, filas 17–19</td></tr>
+      <tr><td>DS18B20 · rojo</td><td>Placa · pin <code>3V3</code></td><td>fila 24</td></tr>
+      <tr><td>DS18B20 · datos</td><td><code>GPIO4</code></td><td>fila 25, con 2×10k en paralelo hacia fila 24 (3V3)</td></tr>
+      <tr><td>DS18B20 · negro</td><td>Columna 1 (GND)</td><td>fila 26</td></tr>
+      <tr><td>TDS · VCC (+)</td><td><code>GPIO25</code></td><td>dupont directo</td></tr>
+      <tr><td>TDS · A (analógica)</td><td><code>GPIO35</code></td><td>dupont directo</td></tr>
+      <tr><td>TDS · GND (−)</td><td>Columna 1 (GND)</td><td>dupont directo</td></tr>
+      <tr><td>Relé · VCC / GND / IN</td><td>5 V / GND / <code>GPIO26</code></td><td>dupont directo</td></tr>
+      <tr><td>Fuente 12 V +</td><td>fusible → interruptor → jack de la placa <em>y</em> relé <code>COM</code></td><td>cable 12 V</td></tr>
+      <tr><td>Relé <code>NO</code></td><td>Bomba +</td><td>cable 12 V, con HER208 en paralelo a la bomba (banda al +)</td></tr>
+      <tr><td>Bomba −</td><td>Fuente 12 V −</td><td>cable</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<!-- ============================================================ CHECKLIST -->
+<section id="checklist">
+  <h2><span class="num">9</span>Checklist antes de enchufar nada</h2>
+  <ol>
+    <li>Ningún cable de <strong>12 V</strong> toca la protoboard, ni el carril de 5 V, ni ningún pin del ESP32. El 12 V solo existe en: jack de la placa, bornero del relé y bomba.</li>
+    <li>Los 5 cables <strong>azules</strong> de los XKC-Y25 están aislados con cinta y no tocan nada.</li>
+    <li>Cada cable amarillo pasa por su divisor: <strong>ningún amarillo va directo a un GPIO</strong>.</li>
+    <li>El rojo del <strong>DS18B20 va a 3V3</strong>, no a 5 V.</li>
+    <li>El diodo <strong>HER208</strong> está en paralelo con la bomba con la <strong>banda gris hacia el positivo</strong>.</li>
+    <li>La bomba cuelga del borne <strong>NO</strong> (no del NC) y el <code>COM</code> recibe el +12 V.</li>
+    <li>Repasa fila por fila que las patas de cada resistencia están en las filas correctas (una pata mal metida = divisor inútil).</li>
+    <li>Los negativos de todo (fuente, placa, sensores, relé) acaban en el <strong>mismo GND común</strong>.</li>
+  </ol>
+  <div class="okbox">
+    <svg class="ic" viewBox="0 0 24 24"><path d="M5 13l4 4 10-11"/></svg>
+    <div>Hecho el repaso: conecta <strong>solo el USB</strong> (sin fuente de 12 V) y pasa al sketch de prueba. La bomba y el 12 V se prueban al final.</div>
+  </div>
+</section>
+
+<!-- ============================================================ TEST -->
+<section id="test">
+  <h2><span class="num">10</span>Paso 1 · Sketch de prueba: el ESP32 como comprobador</h2>
+  <p>Sin multímetro, el propio ESP32 verifica el montaje. Este sketch <strong>no usa WiFi ni mueve la bomba solo</strong>: imprime cada 2 segundos el estado de los 5 niveles, la temperatura y el TDS. El relé solo se activa si tú escribes <code>b</code> en el monitor serie.</p>
+
+  <h3>Preparar el Arduino IDE (solo la primera vez)</h3>
+  <div class="steps">
+    <div>Instala el <strong>Arduino IDE 2</strong> desde arduino.cc.</div>
+    <div>En <em>Archivo → Preferencias → URLs adicionales de gestor de placas</em> pega: <code>https://espressif.github.io/arduino-esp32/package_esp32_index.json</code></div>
+    <div>En <em>Herramientas → Placa → Gestor de placas</em> busca <strong>esp32</strong> (de Espressif Systems) e instálalo.</div>
+    <div>En <em>Herramientas → Gestionar bibliotecas</em> instala <strong>OneWire</strong> (Paul Stoffregen) y <strong>DallasTemperature</strong> (Miles Burton).</div>
+    <div>Conecta el ESP32 por USB. En <em>Herramientas → Placa</em> elige <strong>ESP32 Dev Module</strong> y en <em>Puerto</em> el que aparezca al conectarlo (si no aparece ninguno, instala el driver USB <em>CP210x</em> o <em>CH340</em> según el chip de tu placa).</div>
+    <div>Pega el sketch, pulsa <strong>Subir</strong> (→). Si se queda en <code>Connecting...</code>, mantén pulsado el botón <strong>BOOT</strong> de la placa hasta que empiece a escribir.</div>
+    <div>Abre el <em>Monitor Serie</em> (lupa arriba a la derecha) a <strong>115200 baudios</strong>.</div>
+  </div>
+
+  <div class="codeblock">
+    <button data-copy>Copiar</button>
+<pre>/*
+ * PRUEBA DE MONTAJE — monitor hidroponía (sin WiFi, sin bomba automática)
+ * Imprime sensores cada 2 s. Escribe 'b' + Enter en el monitor serie para
+ * conmutar el relé a mano (¡sin 12 V conectado la primera vez!).
+ */
+#include &lt;OneWire.h&gt;
+#include &lt;DallasTemperature.h&gt;
+#include "driver/gpio.h"
+
+#define PIN_PPAL_ALTO   32
+#define PIN_PPAL_BAJO   33
+#define PIN_AUX_ALTO    34
+#define PIN_AUX_MEDIO   36
+#define PIN_AUX_BAJO    39
+#define PIN_TDS         35
+#define PIN_TDS_POWER   25
+#define PIN_ONEWIRE     4
+#define PIN_RELE        26
+#define RELE_ACTIVO_BAJO 1
+
+OneWire oneWire(PIN_ONEWIRE);
+DallasTemperature ds18b20(&amp;oneWire);
+bool releOn = false;
+
+void setRele(bool on) {
+  releOn = on;
+#if RELE_ACTIVO_BAJO
+  digitalWrite(PIN_RELE, on ? LOW : HIGH);
+#else
+  digitalWrite(PIN_RELE, on ? HIGH : LOW);
+#endif
+}
+
+void setup() {
+  Serial.begin(115200);
+  pinMode(PIN_RELE, OUTPUT);
+  setRele(false);
+  pinMode(PIN_PPAL_ALTO, INPUT);
+  pinMode(PIN_PPAL_BAJO, INPUT);
+  pinMode(PIN_AUX_ALTO, INPUT);
+  pinMode(PIN_AUX_MEDIO, INPUT);
+  pinMode(PIN_AUX_BAJO, INPUT);
+  pinMode(PIN_TDS_POWER, OUTPUT);
+  digitalWrite(PIN_TDS_POWER, LOW);
+  analogReadResolution(12);
+  analogSetPinAttenuation(PIN_TDS, ADC_11db);
+  gpio_pullup_en((gpio_num_t)PIN_ONEWIRE);
+  ds18b20.begin();
+  Serial.println("\n=== PRUEBA DE MONTAJE ===");
+  Serial.printf("DS18B20 detectados: %d (debe ser 1)\n", ds18b20.getDeviceCount());
+  Serial.println("Escribe 'b' + Enter para conmutar el rele.\n");
+}
+
+void loop() {
+  if (Serial.available()) {
+    char c = Serial.read();
+    if (c == 'b' || c == 'B') {
+      setRele(!releOn);
+      Serial.printf("&gt;&gt;&gt; RELE %s (deberias oir un clic)\n", releOn ? "CERRADO" : "ABIERTO");
+    }
+  }
+
+  int pa = digitalRead(PIN_PPAL_ALTO);
+  int pb = digitalRead(PIN_PPAL_BAJO);
+  int aa = digitalRead(PIN_AUX_ALTO);
+  int am = digitalRead(PIN_AUX_MEDIO);
+  int ab = digitalRead(PIN_AUX_BAJO);
+
+  ds18b20.requestTemperatures();
+  float t = ds18b20.getTempCByIndex(0);
+
+  digitalWrite(PIN_TDS_POWER, HIGH);
+  delay(500);
+  int adc = analogRead(PIN_TDS);
+  digitalWrite(PIN_TDS_POWER, LOW);
+
+  Serial.printf("Niveles ppal[A=%d B=%d] aux[A=%d M=%d B=%d] | Temp=%.1f C | TDS adc=%d | Rele=%s\n",
+                pa, pb, aa, am, ab, t, adc, releOn ? "ON" : "off");
+  delay(1500);
+}</pre>
+  </div>
+
+  <h3>Qué debes ver (y qué hacer si no)</h3>
+  <div class="table-scroll"><table>
+    <thead><tr><th>Prueba</th><th>Resultado esperado</th><th>Si falla</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>Pegar la palma de la mano al sensor de nivel (simula agua)</td>
+        <td>Ese nivel pasa de <code>0</code> a <code>1</code> y vuelve a <code>0</code> al retirarla</td>
+        <td>Si no cambia: revisa el divisor de ese sensor (filas y patas). Si va al revés o siempre marca <code>1</code>: puede ser la variante NPN — prueba a cambiar <code>NIVEL_AGUA_PRESENTE</code> a <code>0</code> en el firmware, o dime qué ves y lo ajustamos</td>
+      </tr>
+      <tr>
+        <td>Temperatura</td>
+        <td>Valor razonable (ambiente, ~18–30 °C); metiendo la sonda en agua tibia debe subir</td>
+        <td><code>-127.0</code> = no comunica: revisa filas 24–26, el pull-up de 2×10k y que el rojo esté en 3V3</td>
+      </tr>
+      <tr>
+        <td>TDS con la sonda en un vaso de agua</td>
+        <td><code>adc</code> entre ~200 y ~2500 (agua del grifo); al aire, cerca de 0</td>
+        <td>Siempre 0: revisa VCC→GPIO25 y A→GPIO35. Siempre ~4095: la señal está a más de 3.3 V — desconéctala y avísame</td>
+      </tr>
+      <tr>
+        <td>Escribir <code>b</code> (sin 12 V conectado)</td>
+        <td>Clic audible del relé y su LED cambia</td>
+        <td>Nada: revisa VCC/GND/IN del relé. Invertido (clic al arrancar): cambia <code>RELE_ACTIVO_BAJO</code> a <code>0</code></td>
+      </tr>
+      <tr>
+        <td>Prueba final con 12 V (bomba en agua o en seco &lt;5 s)</td>
+        <td>Con <code>b</code>, la bomba arranca y para</td>
+        <td>Nada al hacer clic el relé: revisa COM/NO y el fusible. La bomba nunca debe funcionar con el relé abierto</td>
+      </tr>
+    </tbody>
+  </table></div>
+</section>
+
+<!-- ============================================================ FIRMWARE -->
+<section id="firmware">
+  <h2><span class="num">11</span>Paso 2 · Firmware definitivo</h2>
+  <p>Cuando todas las pruebas pasen, carga este sketch. Es el firmware completo: control automático de la bomba con sus protecciones y envío de datos al dashboard. <strong>Antes de subirlo, edita las 4 líneas del bloque CONFIGURA ESTO</strong> (WiFi y backend; el token debe ser el mismo que pusiste en el Apps Script).</p>
+
+  <div class="codeblock">
+    <button data-copy>Copiar</button>
+<pre>/*
+ * FIRMWARE MONITOR HIDROPONIA — ESP32 (version Arduino IDE)
+ * Identico al de firmware/src/main.cpp del repositorio, en un solo sketch.
+ * Librerias necesarias: OneWire (P. Stoffregen), DallasTemperature (M. Burton)
+ */
+#include &lt;WiFi.h&gt;
+#include &lt;WiFiClientSecure.h&gt;
+#include &lt;HTTPClient.h&gt;
+#include &lt;OneWire.h&gt;
+#include &lt;DallasTemperature.h&gt;
+#include &lt;time.h&gt;
+#include "driver/gpio.h"
+
+// ========================= CONFIGURA ESTO =========================
+#define WIFI_SSID   "PON_AQUI_TU_SSID"
+#define WIFI_PASS   "PON_AQUI_TU_PASSWORD"
+#define API_URL     "PON_AQUI_LA_URL_EXEC_DE_APPS_SCRIPT"
+#define API_TOKEN   "PON_AQUI_UN_TOKEN_SECRETO"
+// ==================================================================
+
+// Pines (segun la guia de montaje)
+#define PIN_PPAL_ALTO   32
+#define PIN_PPAL_BAJO   33
+#define PIN_AUX_ALTO    34
+#define PIN_AUX_MEDIO   36
+#define PIN_AUX_BAJO    39
+#define PIN_TDS         35
+#define PIN_TDS_POWER   25
+#define PIN_ONEWIRE     4
+#define PIN_RELE        26
+
+#define RELE_ACTIVO_BAJO    1   // 0 si tu rele funciona al reves
+#define NIVEL_AGUA_PRESENTE 1   // 0 si tus sensores leen invertido
+
+#define SEND_INTERVAL_MS    60000UL
+#define PUMP_TIMEOUT_MS     300000UL
+#define PUMP_MIN_OFF_MS     30000UL
+#define LEVEL_SAMPLES       5
+#define LEVEL_SAMPLE_GAP_MS 10
+#define TDS_WARMUP_MS       500
+#define TDS_SAMPLES         15
+#define TDS_VREF            3.3f
+#define TDS_KFACTOR         1.0f
+#define EC_TO_TDS           0.5f
+#define NTP_SERVER          "pool.ntp.org"
+
+OneWire oneWire(PIN_ONEWIRE);
+DallasTemperature ds18b20(&amp;oneWire);
+
+struct Niveles {
+  bool ppalAlto, ppalBajo;
+  bool auxAlto, auxMedio, auxBajo;
+};
+
+enum class Alerta { NINGUNA, MARCHA_SECO, TIMEOUT_BOMBA, SENSOR_FALLO };
+
+bool bombaOn = false;
+unsigned long bombaStartMs = 0;
+unsigned long bombaStopMs = 0;
+Alerta alertaActiva = Alerta::NINGUNA;
+bool timeoutLatch = false;
+
+float ultimaTempC = NAN;
+float ultimoTds = NAN;
+float ultimoEc = NAN;
+unsigned long ultimoEnvioMs = 0;
+bool envioInmediato = false;
+
+bool leerNivel(uint8_t pin) {
+  int votos = 0;
+  for (int i = 0; i &lt; LEVEL_SAMPLES; i++) {
+    if (digitalRead(pin) == NIVEL_AGUA_PRESENTE) votos++;
+    delay(LEVEL_SAMPLE_GAP_MS);
+  }
+  return votos &gt; LEVEL_SAMPLES / 2;
+}
+
+Niveles leerNiveles() {
+  Niveles n;
+  n.ppalAlto = leerNivel(PIN_PPAL_ALTO);
+  n.ppalBajo = leerNivel(PIN_PPAL_BAJO);
+  n.auxAlto  = leerNivel(PIN_AUX_ALTO);
+  n.auxMedio = leerNivel(PIN_AUX_MEDIO);
+  n.auxBajo  = leerNivel(PIN_AUX_BAJO);
+  return n;
+}
+
+bool nivelesIncoherentes(const Niveles&amp; n) {
+  if (n.ppalAlto &amp;&amp; !n.ppalBajo) return true;
+  if (n.auxAlto &amp;&amp; !n.auxMedio) return true;
+  if (n.auxMedio &amp;&amp; !n.auxBajo) return true;
+  return false;
+}
+
+void setBomba(bool on) {
+  if (on == bombaOn) return;
+  bombaOn = on;
+#if RELE_ACTIVO_BAJO
+  digitalWrite(PIN_RELE, on ? LOW : HIGH);
+#else
+  digitalWrite(PIN_RELE, on ? HIGH : LOW);
+#endif
+  if (on) bombaStartMs = millis();
+  else    bombaStopMs = millis();
+  envioInmediato = true;
+  Serial.printf("[BOMBA] %s\n", on ? "ON" : "OFF");
+}
+
+void setAlerta(Alerta a) {
+  if (a == alertaActiva) return;
+  alertaActiva = a;
+  envioInmediato = true;
+}
+
+void controlBomba(const Niveles&amp; n) {
+  if (nivelesIncoherentes(n)) {
+    setBomba(false);
+    setAlerta(Alerta::SENSOR_FALLO);
+    return;
+  }
+  if (alertaActiva == Alerta::SENSOR_FALLO) setAlerta(Alerta::NINGUNA);
+
+  if (!n.auxBajo) {
+    if (bombaOn) {
+      setBomba(false);
+      setAlerta(Alerta::MARCHA_SECO);
+    }
+    return;
+  }
+  if (alertaActiva == Alerta::MARCHA_SECO) setAlerta(Alerta::NINGUNA);
+
+  if (bombaOn) {
+    if (n.ppalAlto) { setBomba(false); return; }
+    if (millis() - bombaStartMs &gt; PUMP_TIMEOUT_MS) {
+      setBomba(false);
+      timeoutLatch = true;
+      setAlerta(Alerta::TIMEOUT_BOMBA);
+    }
+    return;
+  }
+
+  if (timeoutLatch) {
+    if (n.ppalAlto) {
+      timeoutLatch = false;
+      setAlerta(Alerta::NINGUNA);
+    }
+    return;
+  }
+
+  bool reposoOk = (bombaStopMs == 0) || (millis() - bombaStopMs &gt; PUMP_MIN_OFF_MS);
+  if (!n.ppalBajo &amp;&amp; reposoOk) setBomba(true);
+}
+
+float leerTemperatura() {
+  ds18b20.requestTemperatures();
+  float t = ds18b20.getTempCByIndex(0);
+  if (t == DEVICE_DISCONNECTED_C || t &lt; -40 || t &gt; 85) return NAN;
+  return t;
+}
+
+int compararUint16(const void* a, const void* b) {
+  return (int)(*(const uint16_t*)a) - (int)(*(const uint16_t*)b);
+}
+
+void leerTdsEc(float tempC, float&amp; ecOut, float&amp; tdsOut) {
+  digitalWrite(PIN_TDS_POWER, HIGH);
+  delay(TDS_WARMUP_MS);
+
+  uint16_t muestras[TDS_SAMPLES];
+  for (int i = 0; i &lt; TDS_SAMPLES; i++) {
+    muestras[i] = analogRead(PIN_TDS);
+    delay(20);
+  }
+  digitalWrite(PIN_TDS_POWER, LOW);
+
+  qsort(muestras, TDS_SAMPLES, sizeof(uint16_t), compararUint16);
+  float adc = muestras[TDS_SAMPLES / 2];
+
+  float v = adc * TDS_VREF / 4095.0f;
+  float coefComp = isnan(tempC) ? 1.0f : (1.0f + 0.02f * (tempC - 25.0f));
+  float vComp = v / coefComp;
+
+  float ec = (133.42f * vComp * vComp * vComp
+              - 255.86f * vComp * vComp
+              + 857.39f * vComp) * TDS_KFACTOR;
+  if (ec &lt; 0) ec = 0;
+
+  ecOut = ec;
+  tdsOut = ec * EC_TO_TDS;
+}
+
+const char* alertaTexto() {
+  switch (alertaActiva) {
+    case Alerta::MARCHA_SECO:   return "marcha_seco";
+    case Alerta::TIMEOUT_BOMBA: return "timeout_bomba";
+    case Alerta::SENSOR_FALLO:  return "sensor_fallo";
+    default:                    return "";
+  }
+}
+
+void asegurarWifi() {
+  if (WiFi.status() == WL_CONNECTED) return;
+  Serial.println("[WIFI] Reconectando...");
+  WiFi.disconnect();
+  WiFi.begin(WIFI_SSID, WIFI_PASS);
+  for (int i = 0; i &lt; 20 &amp;&amp; WiFi.status() != WL_CONNECTED; i++) delay(500);
+  Serial.printf("[WIFI] %s\n", WiFi.status() == WL_CONNECTED ? "conectado" : "sin conexion");
+}
+
+bool enviarDatos(const Niveles&amp; n) {
+  if (WiFi.status() != WL_CONNECTED) return false;
+
+  String json = "{";
+  json += "\"token\":\"" API_TOKEN "\",";
+  json += "\"nivel_ppal_alto\":" + String(n.ppalAlto ? 1 : 0) + ",";
+  json += "\"nivel_ppal_bajo\":" + String(n.ppalBajo ? 1 : 0) + ",";
+  json += "\"nivel_aux_alto\":" + String(n.auxAlto ? 1 : 0) + ",";
+  json += "\"nivel_aux_medio\":" + String(n.auxMedio ? 1 : 0) + ",";
+  json += "\"nivel_aux_bajo\":" + String(n.auxBajo ? 1 : 0) + ",";
+  json += "\"temp_c\":" + (isnan(ultimaTempC) ? String("null") : String(ultimaTempC, 1)) + ",";
+  json += "\"tds_ppm\":" + (isnan(ultimoTds) ? String("null") : String(ultimoTds, 0)) + ",";
+  json += "\"ec_us\":" + (isnan(ultimoEc) ? String("null") : String(ultimoEc, 0)) + ",";
+  json += "\"bomba\":" + String(bombaOn ? 1 : 0) + ",";
+  json += "\"alerta\":\"" + String(alertaTexto()) + "\",";
+  json += "\"rssi\":" + String(WiFi.RSSI());
+
+  time_t ahora = time(nullptr);
+  if (ahora &gt; 1600000000) {
+    json += ",\"ts\":" + String((unsigned long)ahora);
+  }
+  json += "}";
+
+  WiFiClientSecure client;
+  client.setInsecure();
+
+  HTTPClient http;
+  http.begin(client, API_URL);
+  http.addHeader("Content-Type", "application/json");
+  http.setFollowRedirects(HTTPC_FORCE_FOLLOW_REDIRECTS);
+  http.setTimeout(15000);
+
+  int code = http.POST(json);
+  Serial.printf("[HTTP] POST -&gt; %d\n", code);
+  http.end();
+  return code &gt;= 200 &amp;&amp; code &lt; 400;
+}
+
+void setup() {
+  Serial.begin(115200);
+  Serial.println("\n[BOOT] Monitor hidroponia");
+
+  pinMode(PIN_RELE, OUTPUT);
+#if RELE_ACTIVO_BAJO
+  digitalWrite(PIN_RELE, HIGH);
+#else
+  digitalWrite(PIN_RELE, LOW);
+#endif
+
+  pinMode(PIN_PPAL_ALTO, INPUT);
+  pinMode(PIN_PPAL_BAJO, INPUT);
+  pinMode(PIN_AUX_ALTO, INPUT);
+  pinMode(PIN_AUX_MEDIO, INPUT);
+  pinMode(PIN_AUX_BAJO, INPUT);
+
+  pinMode(PIN_TDS_POWER, OUTPUT);
+  digitalWrite(PIN_TDS_POWER, LOW);
+
+  analogReadResolution(12);
+  analogSetPinAttenuation(PIN_TDS, ADC_11db);
+
+  gpio_pullup_en((gpio_num_t)PIN_ONEWIRE);
+  ds18b20.begin();
+  Serial.printf("[TEMP] Sensores DS18B20 detectados: %d\n", ds18b20.getDeviceCount());
+
+  WiFi.mode(WIFI_STA);
+  asegurarWifi();
+  configTime(0, 0, NTP_SERVER);
+}
+
+void loop() {
+  asegurarWifi();
+
+  Niveles n = leerNiveles();
+  controlBomba(n);
+
+  unsigned long ahora = millis();
+  bool tocaEnviar = envioInmediato || (ahora - ultimoEnvioMs &gt;= SEND_INTERVAL_MS) || ultimoEnvioMs == 0;
+
+  if (tocaEnviar) {
+    ultimaTempC = leerTemperatura();
+    leerTdsEc(ultimaTempC, ultimoEc, ultimoTds);
+
+    Serial.printf("[DATOS] ppal(A%u B%u) aux(A%u M%u B%u) T=%.1fC EC=%.0fuS TDS=%.0fppm bomba=%u alerta=%s\n",
+                  n.ppalAlto, n.ppalBajo, n.auxAlto, n.auxMedio, n.auxBajo,
+                  ultimaTempC, ultimoEc, ultimoTds, bombaOn, alertaTexto());
+
+    if (enviarDatos(n)) {
+      ultimoEnvioMs = ahora;
+      envioInmediato = false;
+    } else if (envioInmediato) {
+      envioInmediato = false;
+      ultimoEnvioMs = ahora;
+    }
+  }
+
+  delay(750);
+}</pre>
+  </div>
+
+  <div class="okbox">
+    <svg class="ic" viewBox="0 0 24 24"><path d="M5 13l4 4 10-11"/></svg>
+    <div>Tras subirlo, el monitor serie debe mostrar <code>[WIFI] conectado</code> y <code>[HTTP] POST -&gt; 200</code> (o 302, también vale) cada minuto, y en un par de minutos verás los datos reales en el <a href="index.html">dashboard</a>.</div>
+  </div>
+</section>
+
+<footer>
+  Guía de montaje del <a href="index.html">monitor de hidroponía</a> · el código de esta página es el mismo que hay en <code>firmware/</code> del repositorio.
+</footer>
+
+<script>
+'use strict';
+document.querySelectorAll('[data-copy]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const pre = btn.parentElement.querySelector('pre');
+    navigator.clipboard.writeText(pre.textContent).then(() => {
+      btn.textContent = 'Copiado ✓';
+      setTimeout(() => { btn.textContent = 'Copiar'; }, 2000);
+    });
+  });
+});
+</script>
+</body>
+</html>

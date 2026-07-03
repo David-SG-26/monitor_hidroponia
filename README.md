@@ -15,6 +15,7 @@ GitHub Pages (docs/) ──GET── estado + histórico (JSON / JSONP)
 | Backend | `backend/Code.gs` | Apps Script: recibe POST autenticados, guarda en Sheets, sirve GET |
 | Frontend | `docs/index.html` | Dashboard estático para GitHub Pages |
 | Firmware | `firmware/` | Proyecto PlatformIO para ESP32-WROOM-32 |
+| Guía de montaje | `docs/conexiones.html` | Cableado paso a paso + código para Arduino IDE (se publica con Pages) |
 
 ## Contrato de datos (fijo — no cambiar sin avisar)
 
