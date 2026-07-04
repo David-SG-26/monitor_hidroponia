@@ -5,16 +5,20 @@
  *   rojo/rosa -> +5V
  *   azul      -> GND
  *   negro     -> modo: AISLAR con cinta, NO conectar
- *   amarillo  -> señal
+ *   amarillo  -> señal (~4,94V, pasa por el divisor de abajo)
  *
- * La señal sale a ~5V y el GPIO del ESP32 admite 3.3V. Por eso el amarillo
- * pasa por UNA resistencia de 10k EN SERIE hasta el pin:
+ * La señal activa mide ~4,94V y el GPIO del ESP32 admite 3.3V. Por eso el
+ * amarillo pasa por un DIVISOR de 3 resistencias de 10k:
  *
- *   amarillo --[ 10k ]-- GPIO32
+ *   amarillo --[ R1 10k ]--+-- GPIO32   (nodo de salida ~3,29V)
+ *                          |
+ *                       [ R2 10k ]
+ *                          |
+ *                       [ R3 10k ]
+ *                          |
+ *                         GND
  *
- * No es un divisor (no lleva segunda resistencia a GND): como el pin es de
- * alta impedancia, no baja el nivel lógico (lee la señal completa), pero
- * limita la corriente en los diodos internos del ESP32 y protege el pin.
+ * R1 (arriba) = 10k, R2+R3 (abajo) = 20k -> Vout = 4,94 x 20/30 = 3,29V.
  *
  * CÓMO INTERPRETAR EL MONITOR SERIE (115200 baudios):
  *
@@ -22,7 +26,7 @@
  *   Sin palma = 1  y  con palma = 0   -> invertido: no toques el hardware,
  *       se arregla en firmware con NIVEL_AGUA_PRESENTE 0.
  *   Siempre 0, pase lo que pase       -> revisa: azul a GND, negro aislado,
- *       y que las 2 patas de la resistencia estén en filas distintas.
+ *       y que el nodo entre R1 y R2 (fila 2) sea el que va al GPIO.
  *
  * Pines para repetir la prueba con los demás sensores: 32, 33, 34, 36, 39.
  */
@@ -38,7 +42,7 @@ void setup() {
   Serial.print("=== Prueba del sensor en GPIO");
   Serial.print(PIN_SENSOR);
   Serial.println(" ===");
-  Serial.println("Cableado: rojo=+5V, azul=GND, negro=aislar, amarillo->10k->pin.");
+  Serial.println("Cableado: rojo=+5V, azul=GND, negro=aislar, amarillo->divisor 3x10k->pin.");
   Serial.println("Apunta que lee SIN palma y CON palma.");
 }
 

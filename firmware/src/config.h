@@ -39,10 +39,11 @@
 
 // Sensores XKC-Y25 (salida por voltaje) — confirmado en pruebas: agua = 1,
 // sin agua = 0. Cableado real: rojo/rosa = +5V, azul = GND, amarillo = señal,
-// negro = modo (se deja AISLADO, sin conectar). La señal sale a ~5V, así que
-// cada amarillo pasa por UNA resistencia de 10k EN SERIE hasta el GPIO: protege
-// el pin y no baja el nivel lógico (no es divisor). Si alguna unidad invierte
-// la lógica, poner NIVEL_AGUA_PRESENTE 0.
+// negro = modo (se deja AISLADO, sin conectar). La señal activa mide ~4,94V
+// (medido con multímetro), así que cada amarillo pasa por un DIVISOR de 3
+// resistencias de 10k: R1 (10k) arriba y R2+R3 (20k) abajo a GND. El nodo entre
+// R1 y R2 (~3,29V) va al GPIO. Si alguna unidad invierte la lógica, poner
+// NIVEL_AGUA_PRESENTE 0.
 #define NIVEL_AGUA_PRESENTE 1
 
 // ================================ TIEMPOS =================================

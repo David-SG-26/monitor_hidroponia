@@ -196,7 +196,7 @@
     <ul>
       <li>Monta y revisa <strong>todo con la fuente desenchufada y el USB desconectado</strong>. Solo se enchufa al final, tras el checklist.</li>
       <li><strong>El 12 V nunca toca la protoboard ni ningún pin del ESP32.</strong> El 12 V solo va al jack de la placa de extensión y al circuito de la bomba.</li>
-      <li>Los pines del ESP32 solo aguantan <strong>3.3 V</strong>. Por eso las señales de los sensores de nivel (que trabajan a 5 V) pasan por una <strong>resistencia de 10 kΩ en serie</strong> que protege el pin.</li>
+      <li>Los pines del ESP32 solo aguantan <strong>3.3 V</strong>. Por eso las señales de los sensores de nivel (~4,94 V) pasan por un <strong>divisor de 3 resistencias de 10 kΩ</strong> que las baja a ~3,3 V.</li>
       <li>Cada cable de color de esta guía lleva además su etiqueta de texto: fíate de la etiqueta, no solo del color.</li>
       <li>Convención de los esquemas: los cables propios de sensores y módulos se dibujan con <strong>su color real</strong>; los dupont sueltos, con el color de su función (usa el que tengas a mano y guíate por la etiqueta). Un <strong>punto</strong> donde se tocan dos líneas significa "conectado"; si se cruzan sin punto, <strong>no</strong> están conectados.</li>
     </ul>
@@ -210,14 +210,14 @@
     <thead><tr><th>Componente</th><th>Cantidad</th><th>Para qué</th></tr></thead>
     <tbody>
       <tr><td>ESP32-WROOM-32 DevKit + placa de extensión con jack</td><td>1</td><td>El cerebro; la extensión da 5 V / 3.3 V y entrada de alimentación</td></tr>
-      <tr><td>Protoboard 60 filas × 12 columnas</td><td>1</td><td>Resistencias en serie de las señales y carriles de 5 V / GND</td></tr>
+      <tr><td>Protoboard 60 filas × 12 columnas</td><td>1</td><td>Divisores de las señales y carriles de 5 V / GND</td></tr>
       <tr><td>Sensor de nivel XKC-Y25</td><td>5</td><td>2 en depósito principal, 3 en auxiliar</td></tr>
       <tr><td>Sonda DS18B20 impermeable</td><td>1</td><td>Temperatura del agua</td></tr>
       <tr><td>Módulo TDS Meter V1.0 + sonda</td><td>1</td><td>Conductividad (EC) / TDS</td></tr>
       <tr><td>Módulo de relé 1 canal (VCC-GND-IN)</td><td>1</td><td>Encender/apagar la bomba</td></tr>
       <tr><td>Bomba 12 V DC (3–5 W)</td><td>1</td><td>Trasvase auxiliar → principal</td></tr>
       <tr><td>Diodo HER208</td><td>1</td><td>Protección contra el chispazo de la bomba al apagarse</td></tr>
-      <tr><td>Resistencias de 10 kΩ</td><td>7</td><td>5 en serie para los sensores de nivel (1 por sensor) + 2 para el DS18B20</td></tr>
+      <tr><td>Resistencias de 10 kΩ</td><td>17</td><td>15 para los divisores de nivel (3 por sensor) + 2 para el DS18B20</td></tr>
       <tr><td>Fuente 12 V (jack) + fusible + interruptor</td><td>1</td><td>Alimentación única de todo el sistema</td></tr>
       <tr><td>Cables dupont (macho-macho y macho-hembra)</td><td>~25</td><td>Conexiones placa ↔ protoboard ↔ módulos</td></tr>
     </tbody>
@@ -365,7 +365,7 @@
 <section id="niveles">
   <h2><span class="num">4</span>Sensores de nivel XKC-Y25 (×5)</h2>
   <p>Cada sensor tiene 4 cables: <strong>rojo/rosa</strong> (alimentación +), <strong>azul</strong> (GND), <strong>amarillo</strong> (señal) y <strong>negro</strong> (modo — <strong>no se conecta</strong>: aísla su punta con cinta para que no toque nada).</p>
-  <p>El sensor se alimenta a 5 V, así que su señal saca hasta 5 V — más de los 3.3 V que admite el ESP32. La solución más simple y fiable es <strong>una única resistencia de 10 kΩ en serie</strong> entre el amarillo y el pin. No es un divisor (no lleva una segunda resistencia a GND): como la entrada del ESP32 es de alta impedancia, la resistencia no baja el nivel lógico — el pin lee la señal completa y limpia — pero sí limita la corriente en los diodos de protección internos del ESP32 a ~0,17 mA, totalmente segura. <strong>1 resistencia por sensor, 5 en total.</strong></p>
+  <p>El sensor se alimenta a 5 V y su señal activa mide <strong>~4,94 V</strong> (medido con multímetro) — más de los 3.3 V que admite el ESP32. La solución es un <strong>divisor de tensión con 3 resistencias de 10 kΩ</strong>: <strong>R1</strong> (10 kΩ) entre el amarillo y el nodo de salida, y <strong>R2 + R3</strong> (20 kΩ en serie) desde ese nodo hasta GND. El nodo intermedio da <code>4,94 × 20k / (10k + 20k) ≈ 3,29 V</code>, justo lo que necesita el GPIO, y ahí es donde se conecta el pin. <strong>3 resistencias por sensor, 15 en total.</strong></p>
 
   <div class="legend">
     <span><i style="background:var(--w-5v)"></i>5 V</span>
@@ -375,64 +375,89 @@
     <span><i style="background:var(--text-muted)"></i>negro (modo): aislar, no conectar</span>
   </div>
   <div class="diagram">
-    <svg viewBox="0 0 720 220" role="img" aria-label="Resistencia de 10k en serie de un sensor de nivel">
-      <rect x="15" y="55" width="120" height="120" rx="8" class="comp"/>
-      <text x="75" y="90" class="lbl" text-anchor="middle">XKC-Y25</text>
-      <text x="75" y="108" class="lbl2" text-anchor="middle">(pegado al</text>
-      <text x="75" y="123" class="lbl2" text-anchor="middle">depósito)</text>
-      <!-- rojo -->
-      <path d="M135 70 H620 V50" class="wire" stroke="var(--w-5v)"/>
-      <text x="330" y="64" class="lbl2">rojo/rosa → carril 5 V (columna 12)</text>
-      <rect x="595" y="20" width="50" height="30" rx="5" fill="none" stroke="var(--w-5v)" stroke-width="1.6"/>
-      <text x="620" y="40" class="lbl2" text-anchor="middle">5 V</text>
-      <!-- azul = GND -->
-      <path d="M135 160 H180 V195 H620" class="wire" stroke="var(--w-gnd)"/>
-      <text x="330" y="189" class="lbl2">azul → carril GND (columna 1)</text>
-      <rect x="620" y="180" width="50" height="30" rx="5" fill="none" stroke="var(--w-gnd)" stroke-width="1.6"/>
-      <text x="645" y="200" class="lbl2" text-anchor="middle">GND</text>
-      <!-- negro = modo, aislar -->
-      <path d="M135 135 H190" class="wire" stroke="var(--text-muted)" stroke-dasharray="5 4"/>
-      <text x="200" y="139" class="lbl2">negro (modo): punta con cinta, al aire</text>
-      <!-- amarillo + resistencia en serie -->
-      <path d="M135 105 H300" class="wire" stroke="var(--w-sig)"/>
-      <text x="150" y="99" class="lbl2">amarillo (señal)</text>
-      <rect x="300" y="93" width="100" height="24" rx="4" class="res"/>
-      <text x="350" y="110" class="lbl2" text-anchor="middle">10 kΩ en serie</text>
-      <path d="M400 105 H560" class="wire" stroke="var(--w-gpio)"/>
-      <rect x="560" y="90" width="120" height="30" rx="5" fill="none" stroke="var(--w-gpio)" stroke-width="1.6"/>
-      <text x="620" y="110" class="lbl" text-anchor="middle">GPIO del ESP32</text>
+    <svg viewBox="0 0 720 320" role="img" aria-label="Divisor de tensión de 3 resistencias de 10k de un sensor de nivel">
+      <rect x="15" y="70" width="120" height="110" rx="8" class="comp"/>
+      <text x="75" y="105" class="lbl" text-anchor="middle">XKC-Y25</text>
+      <text x="75" y="123" class="lbl2" text-anchor="middle">(pegado al</text>
+      <text x="75" y="138" class="lbl2" text-anchor="middle">depósito)</text>
+      <!-- rojo a 5V -->
+      <path d="M135 85 H660 V60" class="wire" stroke="var(--w-5v)"/>
+      <text x="330" y="79" class="lbl2">rojo/rosa → carril 5 V (columna 12)</text>
+      <rect x="635" y="30" width="50" height="30" rx="5" fill="none" stroke="var(--w-5v)" stroke-width="1.6"/>
+      <text x="660" y="50" class="lbl2" text-anchor="middle">5 V</text>
+      <!-- negro modo -->
+      <path d="M135 155 H190" class="wire" stroke="var(--text-muted)" stroke-dasharray="5 4"/>
+      <text x="200" y="159" class="lbl2">negro (modo): punta con cinta, al aire</text>
+      <!-- amarillo -->
+      <path d="M135 120 H250" class="wire" stroke="var(--w-sig)"/>
+      <text x="150" y="114" class="lbl2">amarillo (señal ~4,94 V)</text>
+      <!-- R1 arriba (horizontal) -->
+      <rect x="250" y="108" width="80" height="24" rx="4" class="res"/>
+      <text x="290" y="125" class="lbl2" text-anchor="middle">R1 10k</text>
+      <!-- nodo de salida -->
+      <path d="M330 120 H400" class="wire" stroke="var(--w-sig)"/>
+      <circle cx="400" cy="120" r="4" fill="var(--w-sig)" class="dot"/>
+      <text x="400" y="104" class="lbl2" text-anchor="middle">nodo ~3,29 V</text>
+      <!-- salida al GPIO -->
+      <path d="M400 120 H560" class="wire" stroke="var(--w-gpio)"/>
+      <rect x="560" y="105" width="130" height="30" rx="5" fill="none" stroke="var(--w-gpio)" stroke-width="1.6"/>
+      <text x="625" y="125" class="lbl" text-anchor="middle">GPIO del ESP32</text>
+      <!-- R2 -->
+      <path d="M400 120 V150" class="wire" stroke="var(--w-sig)"/>
+      <rect x="388" y="150" width="24" height="45" rx="4" class="res"/>
+      <text x="424" y="177" class="lbl2">R2 10k</text>
+      <!-- R3 -->
+      <path d="M400 195 V215" class="wire" stroke="var(--w-sig)"/>
+      <rect x="388" y="215" width="24" height="45" rx="4" class="res"/>
+      <text x="424" y="242" class="lbl2">R3 10k</text>
+      <!-- de R3 a GND -->
+      <path d="M400 260 V286" class="wire" stroke="var(--w-gnd)"/>
+      <!-- azul del sensor a GND -->
+      <path d="M135 175 H160 V286" class="wire" stroke="var(--w-gnd)"/>
+      <text x="150" y="192" class="lbl2">azul (GND)</text>
+      <!-- carril GND -->
+      <path d="M145 286 H420" class="wire" stroke="var(--w-gnd)"/>
+      <circle cx="160" cy="286" r="4" fill="var(--w-gnd)" class="dot"/>
+      <circle cx="400" cy="286" r="4" fill="var(--w-gnd)" class="dot"/>
+      <rect x="95" y="272" width="50" height="28" rx="5" fill="none" stroke="var(--w-gnd)" stroke-width="1.6"/>
+      <text x="120" y="291" class="lbl2" text-anchor="middle">GND</text>
+      <text x="470" y="205" class="lbl2">R2 + R3 = 20 kΩ (rama inferior)</text>
     </svg>
   </div>
 
   <h3>Colocación en la protoboard (mitad izquierda, columnas 2–6)</h3>
-  <p>El patrón es idéntico para los 5 sensores, cada uno en su bloque de 2 filas. Dentro de una misma fila da igual qué agujero de la mitad uses (están unidos):</p>
+  <p>El patrón es idéntico para los 5 sensores, cada uno en su bloque de 3 filas. Dentro de una misma fila da igual qué agujero de la mitad uses (están unidos):</p>
   <ul>
-    <li><strong>Fila A</strong>: cable <strong>amarillo</strong> del sensor + una pata de la <strong>resistencia de 10 kΩ</strong>.</li>
-    <li><strong>Fila B</strong> (la siguiente): la otra pata de la <strong>resistencia</strong> + cable <strong>verde</strong> hacia el pin GPIO de la placa.</li>
-    <li>Además: <strong>rojo/rosa</strong> del sensor → columna 12 (5 V) y <strong>azul</strong> → columna 1 (GND), en cualquier agujero libre de esos carriles.</li>
-    <li>El cable <strong>negro</strong> (modo) se queda con la punta aislada, sin conectar.</li>
+    <li><strong>Fila A</strong>: cable <strong>amarillo</strong> del sensor + una pata de <strong>R1</strong>.</li>
+    <li><strong>Fila B</strong> (la siguiente): la otra pata de <strong>R1</strong> + cable <strong>verde</strong> hacia el pin GPIO + una pata de <strong>R2</strong>. <em>Ésta es la fila de salida (~3,3 V).</em></li>
+    <li><strong>Fila C</strong>: la otra pata de <strong>R2</strong> + una pata de <strong>R3</strong>.</li>
+    <li><strong>Carril GND (columna 1)</strong>: la otra pata de <strong>R3</strong>, el <strong>azul</strong> del sensor y la <strong>GND</strong> de la placa.</li>
+    <li>Además: <strong>rojo/rosa</strong> del sensor → columna 12 (5 V). El cable <strong>negro</strong> (modo) se queda con la punta aislada, sin conectar.</li>
   </ul>
 
-  <h3>Así se ve sobre la protoboard (sensor 1 · filas 1–2; el resto, igual en sus filas)</h3>
+  <h3>Así se ve sobre la protoboard (sensor 1 · filas 1–3; el resto, igual en sus filas)</h3>
   <div class="diagram">
-    <svg viewBox="0 0 720 235" role="img" aria-label="Zoom de la resistencia en serie de un sensor de nivel sobre la protoboard">
-      <text x="360" y="18" class="lbl2" text-anchor="middle">Protoboard · filas 1–2 · mitad izquierda (columnas 2–6); las columnas 7–11 no se usan</text>
+    <svg viewBox="0 0 720 300" role="img" aria-label="Zoom del divisor de 3 resistencias de un sensor de nivel sobre la protoboard">
+      <text x="360" y="18" class="lbl2" text-anchor="middle">Protoboard · filas 1–3 · mitad izquierda (columnas 2–6); las columnas 7–11 no se usan</text>
       <!-- carriles -->
-      <rect x="238" y="45" width="24" height="150" rx="6" fill="none" stroke="var(--w-gnd)" stroke-width="1.8"/>
-      <text x="250" y="212" class="lbl2" text-anchor="middle">col 1 · GND</text>
-      <rect x="555" y="45" width="24" height="150" rx="6" fill="none" stroke="var(--w-5v)" stroke-width="1.8"/>
-      <text x="567" y="212" class="lbl2" text-anchor="middle">col 12 · 5 V</text>
+      <rect x="238" y="45" width="24" height="230" rx="6" fill="none" stroke="var(--w-gnd)" stroke-width="1.8"/>
+      <text x="250" y="290" class="lbl2" text-anchor="middle">col 1 · GND</text>
+      <rect x="555" y="45" width="24" height="230" rx="6" fill="none" stroke="var(--w-5v)" stroke-width="1.8"/>
+      <text x="567" y="290" class="lbl2" text-anchor="middle">col 12 · 5 V</text>
       <!-- bandas de fila (agujeros unidos) -->
       <rect x="286" y="70" width="212" height="24" rx="6" fill="var(--code-bg)"/>
-      <rect x="286" y="130" width="212" height="24" rx="6" fill="var(--code-bg)"/>
+      <rect x="286" y="135" width="212" height="24" rx="6" fill="var(--code-bg)"/>
+      <rect x="286" y="200" width="212" height="24" rx="6" fill="var(--code-bg)"/>
       <text x="228" y="86" class="lbl2" text-anchor="end">f.1</text>
-      <text x="228" y="146" class="lbl2" text-anchor="end">f.2</text>
+      <text x="228" y="151" class="lbl2" text-anchor="end">f.2</text>
+      <text x="228" y="216" class="lbl2" text-anchor="end">f.3</text>
       <!-- agujeros -->
       <g fill="var(--text-muted)">
-        <circle cx="250" cy="82" r="3.5"/><circle cx="250" cy="142" r="3.5"/>
-        <circle cx="567" cy="82" r="3.5"/><circle cx="567" cy="142" r="3.5"/>
+        <circle cx="250" cy="82" r="3.5"/><circle cx="250" cy="147" r="3.5"/><circle cx="250" cy="212" r="3.5"/>
+        <circle cx="567" cy="82" r="3.5"/><circle cx="567" cy="147" r="3.5"/><circle cx="567" cy="212" r="3.5"/>
         <circle cx="300" cy="82" r="3.5"/><circle cx="345" cy="82" r="3.5"/><circle cx="390" cy="82" r="3.5"/><circle cx="435" cy="82" r="3.5"/><circle cx="480" cy="82" r="3.5"/>
-        <circle cx="300" cy="142" r="3.5"/><circle cx="345" cy="142" r="3.5"/><circle cx="390" cy="142" r="3.5"/><circle cx="435" cy="142" r="3.5"/><circle cx="480" cy="142" r="3.5"/>
+        <circle cx="300" cy="147" r="3.5"/><circle cx="345" cy="147" r="3.5"/><circle cx="390" cy="147" r="3.5"/><circle cx="435" cy="147" r="3.5"/><circle cx="480" cy="147" r="3.5"/>
+        <circle cx="300" cy="212" r="3.5"/><circle cx="345" cy="212" r="3.5"/><circle cx="390" cy="212" r="3.5"/><circle cx="435" cy="212" r="3.5"/><circle cx="480" cy="212" r="3.5"/>
       </g>
       <!-- cables del sensor -->
       <text x="85" y="44" class="lbl2" text-anchor="end">rojo/rosa</text>
@@ -441,33 +466,47 @@
       <text x="85" y="86" class="lbl2" text-anchor="end">amarillo</text>
       <path d="M90 82 H300" class="wire" stroke="var(--w-sig)"/>
       <circle cx="300" cy="82" r="4" fill="var(--w-sig)" class="dot"/>
-      <text x="85" y="170" class="lbl2" text-anchor="end">azul (GND)</text>
-      <path d="M90 166 H250 V150" class="wire" stroke="var(--w-gnd)"/>
-      <circle cx="250" cy="150" r="4" fill="var(--w-gnd)" class="dot"/>
-      <text x="85" y="200" class="lbl2" text-anchor="end">negro (modo)</text>
-      <path d="M90 196 H150" class="wire" stroke="var(--text-muted)" stroke-dasharray="5 4"/>
-      <text x="158" y="200" class="lbl2">aislar, no conectar</text>
-      <!-- resistencia en serie entre f.1 y f.2 -->
-      <path d="M345 82 V92" class="wire" stroke="var(--w-sig)" stroke-width="1.8"/>
-      <rect x="337" y="92" width="16" height="40" rx="3" class="res"/>
-      <path d="M345 132 V142" class="wire" stroke="var(--w-gpio)" stroke-width="1.8"/>
+      <text x="85" y="240" class="lbl2" text-anchor="end">azul (GND)</text>
+      <path d="M90 236 H250" class="wire" stroke="var(--w-gnd)"/>
+      <circle cx="250" cy="236" r="4" fill="var(--w-gnd)" class="dot"/>
+      <text x="85" y="270" class="lbl2" text-anchor="end">negro (modo)</text>
+      <path d="M90 266 H150" class="wire" stroke="var(--text-muted)" stroke-dasharray="5 4"/>
+      <text x="158" y="270" class="lbl2">aislar, no conectar</text>
+      <!-- R1 entre f.1 y f.2 -->
+      <path d="M345 82 V95" class="wire" stroke="var(--w-sig)" stroke-width="1.8"/>
+      <rect x="337" y="95" width="16" height="39" rx="3" class="res"/>
+      <path d="M345 134 V147" class="wire" stroke="var(--w-sig)" stroke-width="1.8"/>
       <circle cx="345" cy="82" r="4" fill="var(--w-sig)" class="dot"/>
-      <circle cx="345" cy="142" r="4" fill="var(--w-gpio)" class="dot"/>
-      <text x="362" y="116" class="lbl2">10k en serie</text>
+      <circle cx="345" cy="147" r="4" fill="var(--w-sig)" class="dot"/>
+      <text x="362" y="118" class="lbl2">R1 10k</text>
+      <!-- R2 entre f.2 y f.3 -->
+      <path d="M390 147 V160" class="wire" stroke="var(--w-sig)" stroke-width="1.8"/>
+      <rect x="382" y="160" width="16" height="39" rx="3" class="res"/>
+      <path d="M390 199 V212" class="wire" stroke="var(--w-sig)" stroke-width="1.8"/>
+      <circle cx="390" cy="147" r="4" fill="var(--w-sig)" class="dot"/>
+      <circle cx="390" cy="212" r="4" fill="var(--w-sig)" class="dot"/>
+      <text x="407" y="183" class="lbl2">R2 10k</text>
+      <!-- R3 entre f.3 y carril GND -->
+      <path d="M345 212 V225" class="wire" stroke="var(--w-sig)" stroke-width="1.8"/>
+      <rect x="337" y="225" width="16" height="39" rx="3" class="res"/>
+      <path d="M345 264 V272 H250" class="wire" stroke="var(--w-gnd)" stroke-width="1.8"/>
+      <circle cx="345" cy="212" r="4" fill="var(--w-sig)" class="dot"/>
+      <circle cx="250" cy="272" r="4" fill="var(--w-gnd)" class="dot"/>
+      <text x="362" y="248" class="lbl2">R3 10k</text>
       <!-- dupont verde a GPIO desde f.2 -->
-      <path d="M435 142 H690" class="wire" stroke="var(--w-gpio)"/>
-      <circle cx="435" cy="142" r="4" fill="var(--w-gpio)" class="dot"/>
-      <text x="600" y="134" class="lbl2" text-anchor="middle">→ GPIO32 de la placa</text>
+      <path d="M435 147 H690" class="wire" stroke="var(--w-gpio)"/>
+      <circle cx="435" cy="147" r="4" fill="var(--w-gpio)" class="dot"/>
+      <text x="600" y="139" class="lbl2" text-anchor="middle">→ GPIO32 (salida ~3,3 V)</text>
     </svg>
   </div>
   <div class="table-scroll"><table>
-    <thead><tr><th>Sensor</th><th>Depósito y posición</th><th>Filas protoboard (A·B)</th><th>Pin GPIO</th></tr></thead>
+    <thead><tr><th>Sensor</th><th>Depósito y posición</th><th>Filas protoboard (A·B·C)</th><th>Pin GPIO</th></tr></thead>
     <tbody>
-      <tr><td>Nivel 1</td><td>Principal · alto (para el llenado)</td><td>1 · 2</td><td><code>GPIO32</code></td></tr>
-      <tr><td>Nivel 2</td><td>Principal · bajo (arranca el llenado)</td><td>5 · 6</td><td><code>GPIO33</code></td></tr>
-      <tr><td>Nivel 3</td><td>Auxiliar · medio-alto</td><td>9 · 10</td><td><code>GPIO34</code></td></tr>
-      <tr><td>Nivel 4</td><td>Auxiliar · medio</td><td>13 · 14</td><td><code>GPIO36</code> (a veces rotulado <code>VP</code>)</td></tr>
-      <tr><td>Nivel 5</td><td>Auxiliar · bajo (corta la bomba)</td><td>17 · 18</td><td><code>GPIO39</code> (a veces rotulado <code>VN</code>)</td></tr>
+      <tr><td>Nivel 1</td><td>Principal · alto (para el llenado)</td><td>1 · 2 · 3</td><td><code>GPIO32</code></td></tr>
+      <tr><td>Nivel 2</td><td>Principal · bajo (arranca el llenado)</td><td>5 · 6 · 7</td><td><code>GPIO33</code></td></tr>
+      <tr><td>Nivel 3</td><td>Auxiliar · medio-alto</td><td>9 · 10 · 11</td><td><code>GPIO34</code></td></tr>
+      <tr><td>Nivel 4</td><td>Auxiliar · medio</td><td>13 · 14 · 15</td><td><code>GPIO36</code> (a veces rotulado <code>VP</code>)</td></tr>
+      <tr><td>Nivel 5</td><td>Auxiliar · bajo (corta la bomba)</td><td>17 · 18 · 19</td><td><code>GPIO39</code> (a veces rotulado <code>VN</code>)</td></tr>
     </tbody>
   </table></div>
   <div class="okbox">
@@ -699,7 +738,7 @@
 <!-- ============================================================ GENERAL -->
 <section id="general">
   <h2><span class="num">8</span>Esquema general: todo el montaje de un vistazo</h2>
-  <p>Visión completa con la protoboard en el centro. Cada resistencia en serie aparece aquí como su bloque de filas (el detalle está en los zooms de las secciones 4 y 5). Recuerda: punto = conexión; cruce sin punto = los cables solo pasan por encima.</p>
+  <p>Visión completa con la protoboard en el centro. Cada divisor aparece aquí como su bloque de filas (el detalle de las 3 resistencias está en los zooms de las secciones 4 y 5). Recuerda: punto = conexión; cruce sin punto = los cables solo pasan por encima.</p>
   <div class="legend">
     <span><i style="background:var(--w-5v)"></i>rojo · 5 V / alimentación de sensor</span>
     <span><i style="background:var(--w-gnd)"></i>negro · GND / negativo</span>
@@ -721,20 +760,20 @@
 
       <!-- bandas de filas -->
       <rect x="282" y="86" width="116" height="44" rx="6" fill="var(--code-bg)"/>
-      <text x="340" y="104" class="lbl2" text-anchor="middle">filas 1–2</text>
-      <text x="340" y="119" class="lbl2" text-anchor="middle">R serie ppal ALTO</text>
+      <text x="340" y="104" class="lbl2" text-anchor="middle">filas 1–3</text>
+      <text x="340" y="119" class="lbl2" text-anchor="middle">divisor ppal ALTO</text>
       <rect x="282" y="158" width="116" height="44" rx="6" fill="var(--code-bg)"/>
-      <text x="340" y="176" class="lbl2" text-anchor="middle">filas 5–6</text>
-      <text x="340" y="191" class="lbl2" text-anchor="middle">R serie ppal BAJO</text>
+      <text x="340" y="176" class="lbl2" text-anchor="middle">filas 5–7</text>
+      <text x="340" y="191" class="lbl2" text-anchor="middle">divisor ppal BAJO</text>
       <rect x="282" y="230" width="116" height="44" rx="6" fill="var(--code-bg)"/>
-      <text x="340" y="248" class="lbl2" text-anchor="middle">filas 9–10</text>
-      <text x="340" y="263" class="lbl2" text-anchor="middle">R serie aux M-ALTO</text>
+      <text x="340" y="248" class="lbl2" text-anchor="middle">filas 9–11</text>
+      <text x="340" y="263" class="lbl2" text-anchor="middle">divisor aux M-ALTO</text>
       <rect x="282" y="302" width="116" height="44" rx="6" fill="var(--code-bg)"/>
-      <text x="340" y="320" class="lbl2" text-anchor="middle">filas 13–14</text>
-      <text x="340" y="335" class="lbl2" text-anchor="middle">R serie aux MEDIO</text>
+      <text x="340" y="320" class="lbl2" text-anchor="middle">filas 13–15</text>
+      <text x="340" y="335" class="lbl2" text-anchor="middle">divisor aux MEDIO</text>
       <rect x="282" y="374" width="116" height="44" rx="6" fill="var(--code-bg)"/>
-      <text x="340" y="392" class="lbl2" text-anchor="middle">filas 17–18</text>
-      <text x="340" y="407" class="lbl2" text-anchor="middle">R serie aux BAJO</text>
+      <text x="340" y="392" class="lbl2" text-anchor="middle">filas 17–19</text>
+      <text x="340" y="407" class="lbl2" text-anchor="middle">divisor aux BAJO</text>
       <text x="340" y="442" class="lbl2" text-anchor="middle" opacity="0.6">filas 20–23 libres</text>
       <rect x="282" y="458" width="116" height="44" rx="6" fill="var(--code-bg)"/>
       <text x="340" y="476" class="lbl2" text-anchor="middle">filas 24–26</text>
@@ -918,11 +957,11 @@
       <tr><td>XKC-Y25 ×5 · rojo/rosa</td><td>Columna 12 (5 V)</td><td>directo al carril</td></tr>
       <tr><td>XKC-Y25 ×5 · azul</td><td>Columna 1 (GND)</td><td>directo al carril</td></tr>
       <tr><td>XKC-Y25 ×5 · negro (modo)</td><td>— (aislado con cinta)</td><td>—</td></tr>
-      <tr><td>XKC-Y25 · amarillo (ppal alto)</td><td><code>GPIO32</code></td><td>10k en serie, filas 1–2</td></tr>
-      <tr><td>XKC-Y25 · amarillo (ppal bajo)</td><td><code>GPIO33</code></td><td>10k en serie, filas 5–6</td></tr>
-      <tr><td>XKC-Y25 · amarillo (aux medio-alto)</td><td><code>GPIO34</code></td><td>10k en serie, filas 9–10</td></tr>
-      <tr><td>XKC-Y25 · amarillo (aux medio)</td><td><code>GPIO36</code> / VP</td><td>10k en serie, filas 13–14</td></tr>
-      <tr><td>XKC-Y25 · amarillo (aux bajo)</td><td><code>GPIO39</code> / VN</td><td>10k en serie, filas 17–18</td></tr>
+      <tr><td>XKC-Y25 · amarillo (ppal alto)</td><td><code>GPIO32</code></td><td>divisor 3×10k, filas 1–3</td></tr>
+      <tr><td>XKC-Y25 · amarillo (ppal bajo)</td><td><code>GPIO33</code></td><td>divisor 3×10k, filas 5–7</td></tr>
+      <tr><td>XKC-Y25 · amarillo (aux medio-alto)</td><td><code>GPIO34</code></td><td>divisor 3×10k, filas 9–11</td></tr>
+      <tr><td>XKC-Y25 · amarillo (aux medio)</td><td><code>GPIO36</code> / VP</td><td>divisor 3×10k, filas 13–15</td></tr>
+      <tr><td>XKC-Y25 · amarillo (aux bajo)</td><td><code>GPIO39</code> / VN</td><td>divisor 3×10k, filas 17–19</td></tr>
       <tr><td>DS18B20 · rojo</td><td>Placa · pin <code>3V3</code></td><td>fila 24</td></tr>
       <tr><td>DS18B20 · datos</td><td><code>GPIO4</code></td><td>fila 25, con 2×10k en paralelo hacia fila 24 (3V3)</td></tr>
       <tr><td>DS18B20 · negro</td><td>Columna 1 (GND)</td><td>fila 26</td></tr>
@@ -943,11 +982,11 @@
   <ol>
     <li>Ningún cable de <strong>12 V</strong> toca la protoboard, ni el carril de 5 V, ni ningún pin del ESP32. El 12 V solo existe en: jack de la placa, bornero del relé y bomba.</li>
     <li>Los 5 cables <strong>negros</strong> (modo) de los XKC-Y25 están aislados con cinta y no tocan nada.</li>
-    <li>Cada cable amarillo pasa por su <strong>resistencia de 10 kΩ en serie</strong> antes de llegar al GPIO.</li>
+    <li>Cada cable amarillo pasa por su <strong>divisor de 3×10 kΩ</strong>; el GPIO se conecta al nodo entre R1 y R2 (fila de salida ~3,3 V).</li>
     <li>El rojo del <strong>DS18B20 va a 3V3</strong>, no a 5 V.</li>
     <li>El diodo <strong>HER208</strong> está en paralelo con la bomba con la <strong>banda gris hacia el positivo</strong>.</li>
     <li>La bomba cuelga del borne <strong>NO</strong> (no del NC) y el <code>COM</code> recibe el +12 V.</li>
-    <li>Repasa fila por fila que las dos patas de cada resistencia están en filas distintas (una pata mal metida = el sensor no lee).</li>
+    <li>Repasa fila por fila las 3 resistencias del divisor: R1 (f.1→f.2), R2 (f.2→f.3) y R3 (f.3→GND). Una pata en la fila equivocada = el sensor no lee.</li>
     <li>Los negativos de todo (fuente, placa, sensores, relé) acaban en el <strong>mismo GND común</strong>.</li>
   </ol>
   <div class="okbox">
@@ -1063,7 +1102,7 @@ void loop() {
       <tr>
         <td>Pegar la palma de la mano al sensor de nivel (simula agua)</td>
         <td>Ese nivel pasa de <code>0</code> a <code>1</code> y vuelve a <code>0</code> al retirarla</td>
-        <td>Si marca siempre <code>0</code>: confirma que el cable <strong>azul va a GND</strong>, que el <strong>negro (modo) está aislado</strong> y que la resistencia de 10k en serie tiene sus patas en dos filas distintas (amarillo→R→GPIO). Si va al revés (<code>1</code> sin agua, <code>0</code> con palma): no toques el hardware, cambia <code>NIVEL_AGUA_PRESENTE</code> a <code>0</code> en el firmware, o dime qué ves y lo ajustamos</td>
+        <td>Si marca siempre <code>0</code>: confirma que el cable <strong>azul va a GND</strong>, que el <strong>negro (modo) está aislado</strong> y que el GPIO sale del <strong>nodo entre R1 y R2</strong> (fila 2), no de otro punto del divisor. Si va al revés (<code>1</code> sin agua, <code>0</code> con palma): no toques el hardware, cambia <code>NIVEL_AGUA_PRESENTE</code> a <code>0</code> en el firmware, o dime qué ves y lo ajustamos</td>
       </tr>
       <tr>
         <td>Temperatura</td>

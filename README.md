@@ -95,10 +95,10 @@ en paralelo con la bomba.
 | Temperatura DS18B20 | GPIO4 (pull-up interno) |
 | Relé bomba | GPIO26 |
 
-XKC-Y25 (5 uds.), salida por voltaje ~5 V: rojo/rosa = +5 V, **azul = GND**,
-amarillo = señal (cada uno con **1 resistencia de 10 kΩ en serie** hasta el
-GPIO), **negro = modo (aislado, sin conectar)**. Confirmado: agua = `1`,
-sin agua = `0`.
+XKC-Y25 (5 uds.), salida por voltaje ~4,94 V: rojo/rosa = +5 V, **azul = GND**,
+amarillo = señal (cada uno con un **divisor de 3×10 kΩ** — R1 arriba, R2+R3 =
+20 kΩ abajo — que deja ~3,3 V en el nodo hacia el GPIO), **negro = modo
+(aislado, sin conectar)**. Confirmado: agua = `1`, sin agua = `0`.
 
 ### Notas de diseño del firmware
 
@@ -138,10 +138,10 @@ sin agua = `0`.
 
 ## Pendiente de confirmar
 
-- **XKC-Y25 (resuelto en pruebas)**: salida por voltaje ~5 V. Cada señal
-  (amarillo) pasa por **una resistencia de 10 kΩ en serie** hasta el GPIO —
-  protege el pin sin bajar el nivel lógico (no es divisor). Colores reales:
-  rojo/rosa = +5 V, azul = GND, amarillo = señal, negro = modo (aislado). El
-  nivel activo es configurable en `config.h` (`NIVEL_AGUA_PRESENTE`).
+- **XKC-Y25 (resuelto con multímetro)**: señal activa ~4,94 V. Cada amarillo
+  pasa por un **divisor de 3×10 kΩ** (R1 arriba 10 kΩ, R2+R3 abajo 20 kΩ); el
+  nodo entre R1 y R2 mide ~3,29 V y va al GPIO. Colores reales: rojo/rosa =
+  +5 V, azul = GND, amarillo = señal, negro = modo (aislado). El nivel activo
+  es configurable en `config.h` (`NIVEL_AGUA_PRESENTE`).
 - Nivel de disparo del módulo de relé (activo alto/bajo) → `RELE_ACTIVO_BAJO`.
 - Calibración del TDS con solución patrón → `TDS_KFACTOR`.
