@@ -218,7 +218,7 @@
       <tr><td>Bomba 12 V DC (3–5 W)</td><td>1</td><td>Trasvase auxiliar → principal</td></tr>
       <tr><td>Diodo HER208</td><td>1</td><td>Protección contra el chispazo de la bomba al apagarse</td></tr>
       <tr><td>Resistencias de 10 kΩ</td><td>17</td><td>15 para los divisores de nivel (3 por sensor) + 2 para el DS18B20</td></tr>
-      <tr><td>Fuente 12 V (jack) + fusible + interruptor</td><td>1</td><td>Alimentación única de todo el sistema</td></tr>
+      <tr><td>Fuente 12 V (jack) + portafusible</td><td>1</td><td>Alimentación única de todo el sistema (sin interruptor manual)</td></tr>
       <tr><td>Cables dupont (macho-macho y macho-hembra)</td><td>~25</td><td>Conexiones placa ↔ protoboard ↔ módulos</td></tr>
     </tbody>
   </table></div>
@@ -288,7 +288,7 @@
   <p>Tu material: adaptador de enchufe que da 12 V por un jack macho, un <strong>separador</strong> (1 jack hembra → 2 jacks macho) y <strong>conversores de jack hembra a bornes de tornillo</strong>. Con eso el reparto queda así:</p>
   <ul>
     <li><strong>Rama A</strong>: un macho del separador se enchufa <strong>directamente al jack de la placa de extensión</strong> (ella convierte a 5 V/3.3 V para el ESP32). Sin cables que hacer.</li>
-    <li><strong>Rama B</strong>: el otro macho se enchufa a un <strong>conversor hembra→bornes</strong>. De sus dos tornillos (<code>+</code> y <code>−</code>) salen los cables de la bomba: el <code>+</code> pasa por el <strong>portafusible</strong> y el <strong>interruptor</strong> hasta el borne <code>COM</code> del relé; el <code>−</code> va al negativo de la bomba.</li>
+    <li><strong>Rama B</strong>: el otro macho se enchufa a un <strong>conversor hembra→bornes</strong>. De sus dos tornillos (<code>+</code> y <code>−</code>) salen los cables de la bomba: el <code>+</code> pasa por el <strong>portafusible</strong> hasta el borne <code>COM</code> del relé; el <code>−</code> va al negativo de la bomba. <strong>Sin interruptor manual</strong>: la bomba la enciende/apaga el relé, y para cortar todo se desenchufa el adaptador.</li>
   </ul>
 
   <div class="legend">
@@ -321,14 +321,11 @@
       <text x="407" y="115" class="lbl2" text-anchor="middle">jack hembra → bornes</text>
       <text x="487" y="90" class="lbl2">+</text>
       <text x="487" y="132" class="lbl2">−</text>
-      <!-- + : fusible, interruptor, COM -->
+      <!-- + : fusible → COM (sin interruptor) -->
       <path d="M475 85 H510" class="wire" stroke="var(--w-12v)"/>
       <rect x="510" y="73" width="85" height="24" rx="4" class="res"/>
       <text x="552" y="90" class="lbl2" text-anchor="middle">portafusible</text>
-      <path d="M595 85 H620" class="wire" stroke="var(--w-12v)"/>
-      <rect x="620" y="73" width="85" height="24" rx="4" class="res"/>
-      <text x="662" y="90" class="lbl2" text-anchor="middle">interruptor</text>
-      <path d="M705 85 H725 V170 H705" class="wire" stroke="var(--w-12v)"/>
+      <path d="M595 85 H725 V170 H705" class="wire" stroke="var(--w-12v)"/>
       <rect x="590" y="145" width="115" height="50" rx="8" class="comp"/>
       <text x="647" y="167" class="lbl" text-anchor="middle">Relé · COM</text>
       <text x="647" y="184" class="lbl2" text-anchor="middle">(sección 7)</text>
@@ -345,10 +342,9 @@
   <h3>Cables y empalmes en la rama B</h3>
   <ul>
     <li><strong>Sí, aquí usa cable más gordo que los dupont</strong>: hilo flexible de <strong>0.5–0.75 mm²</strong> (vale cable de altavoz o de un cargador viejo). Los dupont quedan solo para señales y para el 5 V/GND de la protoboard; por la rama B pasa el motor.</li>
-    <li>El <strong>portafusible</strong> de coche típico ya trae dos cables: empalma uno al borne <code>+</code> del conversor y el otro hacia el interruptor.</li>
-    <li>El <strong>interruptor</strong> corta también el cable <code>+</code> (queda en serie: borne + → fusible → interruptor → COM del relé).</li>
-    <li>Para los empalmes usa <strong>clemas de regleta o conectores Wago</strong> — atornillar es mejor que retorcer y encintar. Si el interruptor tiene terminales de tornillo, aprovéchalos como punto de empalme.</li>
-    <li>Con esta estructura el interruptor apaga <strong>solo la bomba</strong>; el ESP32 sigue encendido y enviando datos (lo verás en el dashboard). Para apagarlo todo, desenchufa el adaptador.</li>
+    <li>El <strong>portafusible</strong> de coche típico ya trae dos cables: empalma uno al borne <code>+</code> del conversor y el otro sube al <code>COM</code> del relé. Queda en serie: <code>borne +</code> → <strong>fusible</strong> → <code>COM</code>.</li>
+    <li><strong>No montamos interruptor manual.</strong> Como decidiste, complica el montaje y de todos modos no apagaría todo el sistema (el ESP32 seguiría alimentado por la rama A). El corte de la bomba se hace por firmware (el relé) y, para cortar absolutamente todo, se desenchufa el adaptador de la pared.</li>
+    <li>Para los empalmes usa <strong>clemas de regleta o conectores Wago</strong> — atornillar es mejor que retorcer y encintar.</li>
   </ul>
 
   <div class="warn">
@@ -706,7 +702,7 @@
       <text x="180" y="129" class="lbl2">GPIO26</text>
       <!-- 12V -->
       <path d="M540 20 V75 H445" class="wire" stroke="var(--w-12v)"/>
-      <text x="548" y="30" class="lbl2">+12 V (tras fusible e interruptor)</text>
+      <text x="548" y="30" class="lbl2">+12 V (tras el fusible)</text>
       <path d="M445 105 H540 V150" class="wire" stroke="var(--w-12v)"/>
       <text x="475" y="99" class="lbl2">NO → bomba +</text>
       <!-- bomba -->
@@ -729,13 +725,31 @@
   </div>
   <ul>
     <li><strong>Control</strong> (dupont, sin protoboard): <code>VCC</code> → pin 5V de la placa (o carril 5 V), <code>GND</code> → GND, <code>IN</code> → <code>GPIO26</code>.</li>
-    <li><strong>Contactos</strong> (cable un poco más grueso si puedes, atornillado al bornero): el <strong>+12 V</strong> (después del fusible y el interruptor) entra en <code>COM</code>; de <code>NO</code> sale al <strong>positivo de la bomba</strong>; el <strong>negativo de la bomba</strong> vuelve directo al negativo de la fuente. <code>NC</code> se queda vacío.</li>
-    <li><strong>Diodo HER208</strong>: en paralelo con la bomba, lo más cerca posible de ella. <strong>La banda gris del diodo apunta al cable positivo</strong> de la bomba. Si lo pones al revés hará cortocircuito en cuanto el relé cierre — revísalo dos veces.</li>
+    <li><strong>Contactos</strong> (cable un poco más grueso si puedes, atornillado al bornero): el <strong>+12 V</strong> (después del fusible) entra en <code>COM</code>; de <code>NO</code> sale al <strong>positivo de la bomba</strong>; el <strong>negativo de la bomba</strong> vuelve directo al negativo de la fuente. <code>NC</code> se queda vacío.</li>
+    <li><strong>Diodo HER208 — dónde va físicamente</strong>: <strong>soldado directamente a las dos patillas/terminales de la bomba</strong> (o a los tornillos <code>NO</code> y <code>−</code> justo donde salen los cables de la bomba), <strong>nunca en la protoboard</strong>. Motivos: por ahí pasan los 12 V y el pico de corriente del motor (amperios), muy por encima de lo que aguantan la protoboard y los dupont; y el diodo protege mejor cuanto más pegado esté a la bomba.
+      <ul>
+        <li>Va en <strong>paralelo</strong> con la bomba (una patilla a cada terminal), no en serie.</li>
+        <li><strong>La banda gris (cátodo) apunta al terminal positivo</strong> de la bomba (el que viene de <code>NO</code>); el otro extremo, al negativo. Así en marcha normal el diodo no conduce, y solo "traga" el chispazo cuando el relé abre.</li>
+        <li>Si lo pones al revés hará <strong>cortocircuito</strong> en cuanto el relé cierre — revísalo dos veces.</li>
+        <li>Aísla las patillas con <strong>termorretráctil</strong> o cinta para que no se toquen entre sí ni con la carcasa.</li>
+      </ul>
+    </li>
     <li>Usar <code>NO</code> (normalmente abierto) garantiza que la bomba está <strong>parada</strong> cuando el sistema está apagado o arrancando.</li>
   </ul>
   <div class="infobox">
     <svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 11v5"/><circle cx="12" cy="8" r="0.5" fill="currentColor" stroke="none"/></svg>
     <div>La mayoría de estos módulos son "activos a nivel bajo" (el relé cierra cuando IN se pone a 0). El firmware ya lo asume (<code>RELE_ACTIVO_BAJO 1</code>). Si al probar ves el comportamiento invertido (bomba en marcha cuando debería estar parada), cambia ese valor a <code>0</code> y recarga.</div>
+  </div>
+
+  <div class="warn">
+    <svg class="ic" viewBox="0 0 24 24"><path d="M12 4 21 19H3L12 4Z"/><path d="M12 10v4.5"/><circle cx="12" cy="16.8" r="0.5" fill="currentColor" stroke="none"/></svg>
+    <div><strong>Montar todo pero SIN que la bomba pueda arrancar (para no quemarla en seco)</strong><br>
+    Si quieres dejar el sistema montado y viendo datos en el dashboard mientras la bomba <strong>aún no está sumergida</strong>, protégela con dos capas:
+      <ul style="margin:6px 0 0">
+        <li><strong>Firmware:</strong> pon <code>BOMBA_HABILITADA 0</code> en <code>config.h</code>. Con eso el relé <strong>no se activa nunca</strong> y no genera alertas de bomba; los sensores y el envío de datos funcionan igual.</li>
+        <li><strong>Físico (el seguro de verdad):</strong> mientras tanto, <strong>no conectes el 12 V a la bomba</strong> — deja sin enchufar la fuente y alimenta el ESP32 por <strong>USB</strong>, o deja el cable de la bomba desconectado del bornero. Aunque hubiera un fallo de software, sin 12 V la bomba no puede girar.</li>
+      </ul>
+      <strong>Cuando ya esté todo listo:</strong> sumerge la bomba, conecta el 12 V, pon <code>BOMBA_HABILITADA 1</code> y vuelve a flashear. El sensor <em>auxiliar bajo</em> (<code>VN</code>/GPIO39) sigue siendo la protección automática de marcha en seco.</div>
   </div>
 </section>
 
@@ -937,13 +951,11 @@
       <!-- − arriba: directo al negativo de la bomba, sin cruces -->
       <path d="M470 975 H600" class="wire" stroke="var(--w-gnd)"/>
       <circle cx="600" cy="975" r="4" fill="var(--w-gnd)" class="dot"/>
-      <!-- + abajo: fusible + interruptor y sube al COM -->
+      <!-- + abajo: fusible y sube al COM (sin interruptor) -->
       <path d="M470 1005 H545" class="wire" stroke="var(--w-12v)"/>
       <rect x="545" y="993" width="65" height="24" rx="4" class="res"/>
       <text x="577" y="1010" class="lbl2" text-anchor="middle">fusible</text>
-      <path d="M610 1005 H630" class="wire" stroke="var(--w-12v)"/>
-      <rect x="630" y="993" width="70" height="24" rx="4" class="res"/>
-      <text x="665" y="1010" class="lbl2" text-anchor="middle">interr.</text>
+      <path d="M610 1005 H700" class="wire" stroke="var(--w-12v)"/>
       <text x="15" y="820" class="lbl2">Los cables negros (modo) de los XKC-Y25 quedan aislados con cinta (no se dibujan).</text>
       <text x="15" y="838" class="lbl2">El detalle interno de cada bloque de filas está en los zooms de las secciones 4 y 5.</text>
     </svg>
@@ -973,7 +985,7 @@
       <tr><td>TDS · A (analógica)</td><td><code>GPIO35</code></td><td>dupont directo</td></tr>
       <tr><td>TDS · GND (−)</td><td>Columna 1 (GND)</td><td>dupont directo</td></tr>
       <tr><td>Relé · VCC / GND / IN</td><td>5 V / GND / <code>GPIO26</code></td><td>dupont directo</td></tr>
-      <tr><td>Fuente 12 V +</td><td>fusible → interruptor → jack de la placa <em>y</em> relé <code>COM</code></td><td>cable 12 V</td></tr>
+      <tr><td>Fuente 12 V +</td><td>fusible → jack de la placa <em>y</em> relé <code>COM</code></td><td>cable 12 V</td></tr>
       <tr><td>Relé <code>NO</code></td><td>Bomba +</td><td>cable 12 V, con HER208 en paralelo a la bomba (banda al +)</td></tr>
       <tr><td>Bomba −</td><td>Fuente 12 V −</td><td>cable</td></tr>
     </tbody>
@@ -988,7 +1000,7 @@
     <li>Los 5 cables <strong>negros</strong> (modo) de los XKC-Y25 están aislados con cinta y no tocan nada.</li>
     <li>Cada cable amarillo pasa por su <strong>divisor de 3×10 kΩ</strong>; el GPIO se conecta al nodo entre R1 y R2 (fila de salida ~3,3 V).</li>
     <li>El rojo del <strong>DS18B20 va a 3V3</strong>, no a 5 V.</li>
-    <li>El diodo <strong>HER208</strong> está en paralelo con la bomba con la <strong>banda gris hacia el positivo</strong>.</li>
+    <li>El diodo <strong>HER208</strong> va <strong>soldado a los bornes de la bomba</strong> (no en la protoboard), en paralelo, con la <strong>banda gris hacia el positivo</strong>.</li>
     <li>La bomba cuelga del borne <strong>NO</strong> (no del NC) y el <code>COM</code> recibe el +12 V.</li>
     <li>Repasa fila por fila las 3 resistencias del divisor: R1 (f.1→f.2), R2 (f.2→f.3) y R3 (f.3→GND). Una pata en la fila equivocada = el sensor no lee.</li>
     <li>Los negativos de todo (fuente, placa, sensores, relé) acaban en el <strong>mismo GND común</strong>.</li>

@@ -79,9 +79,11 @@ ESP32 van siempre al Apps Script.
 
 ## Hardware y cableado
 
-Alimentación: 12 V → fusible → interruptor → (buck a 5 V → VIN del ESP32) +
-(relé/bomba 12 V). **Masa común en todo el sistema.** Diodo HER208 en flyback
-en paralelo con la bomba.
+Alimentación: 12 V → fusible → (jack de la placa de extensión, que da 5 V/3.3 V
+al ESP32) + (relé → bomba 12 V). Sin interruptor manual: la bomba la gobierna el
+relé y, para cortar todo, se desenchufa la fuente. **Masa común en todo el
+sistema.** Diodo HER208 en flyback **soldado directamente en bornes de la bomba**
+(no en la protoboard), banda hacia el `+`.
 
 | Función | Pin ESP32 |
 |---|---|
