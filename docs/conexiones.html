@@ -426,7 +426,7 @@
   </div>
 
   <h3>Colocación en la protoboard (mitad izquierda, columnas 2–6)</h3>
-  <p>El patrón es idéntico para los 5 sensores, cada uno en su bloque de 3 filas. Dentro de una misma fila da igual qué agujero de la mitad uses (están unidos):</p>
+  <p>El patrón es idéntico para los 5 sensores. Cada uno ocupa un <strong>bloque de 5 filas</strong> (las 3 primeras para el divisor + 2 vacías de separación): sensor 1 → filas 1–3, sensor 2 → 6–8, sensor 3 → 11–13, sensor 4 → 16–18, sensor 5 → 21–23. Dentro de una misma fila da igual qué agujero de la mitad uses (están unidos):</p>
   <ul>
     <li><strong>Fila A</strong>: cable <strong>amarillo</strong> del sensor + una pata de <strong>R1</strong>.</li>
     <li><strong>Fila B</strong> (la siguiente): la otra pata de <strong>R1</strong> + cable <strong>verde</strong> hacia el pin GPIO + una pata de <strong>R2</strong>. <em>Ésta es la fila de salida (~3,3 V).</em></li>
@@ -503,10 +503,10 @@
     <thead><tr><th>Sensor</th><th>Depósito y posición</th><th>Filas protoboard (A·B·C)</th><th>Pin GPIO</th></tr></thead>
     <tbody>
       <tr><td>Nivel 1</td><td>Principal · alto (para el llenado)</td><td>1 · 2 · 3</td><td><code>GPIO32</code></td></tr>
-      <tr><td>Nivel 2</td><td>Principal · bajo (arranca el llenado)</td><td>5 · 6 · 7</td><td><code>GPIO33</code></td></tr>
-      <tr><td>Nivel 3</td><td>Auxiliar · medio-alto</td><td>9 · 10 · 11</td><td><code>GPIO34</code></td></tr>
-      <tr><td>Nivel 4</td><td>Auxiliar · medio</td><td>13 · 14 · 15</td><td><code>GPIO36</code> (a veces rotulado <code>VP</code>)</td></tr>
-      <tr><td>Nivel 5</td><td>Auxiliar · bajo (corta la bomba)</td><td>17 · 18 · 19</td><td><code>GPIO39</code> (a veces rotulado <code>VN</code>)</td></tr>
+      <tr><td>Nivel 2</td><td>Principal · bajo (arranca el llenado)</td><td>6 · 7 · 8</td><td><code>GPIO33</code></td></tr>
+      <tr><td>Nivel 3</td><td>Auxiliar · medio-alto</td><td>11 · 12 · 13</td><td><code>GPIO34</code></td></tr>
+      <tr><td>Nivel 4</td><td>Auxiliar · medio</td><td>16 · 17 · 18</td><td><code>GPIO36</code> (a veces rotulado <code>VP</code>)</td></tr>
+      <tr><td>Nivel 5</td><td>Auxiliar · bajo (corta la bomba)</td><td>21 · 22 · 23</td><td><code>GPIO39</code> (a veces rotulado <code>VN</code>)</td></tr>
     </tbody>
   </table></div>
   <div class="okbox">
@@ -565,17 +565,17 @@
     </svg>
   </div>
 
-  <h3>Colocación en la protoboard (filas 24–26, mitad izquierda)</h3>
+  <h3>Colocación en la protoboard (filas 26–28, mitad izquierda)</h3>
   <ul>
-    <li><strong>Fila 24</strong>: cable desde el pin <code>3V3</code> de la placa + cable <strong>rojo</strong> de la sonda + una pata de cada resistencia (las dos).</li>
-    <li><strong>Fila 25</strong>: cable de <strong>datos</strong> de la sonda + las otras dos patas de las resistencias + cable verde a <code>GPIO4</code>.</li>
-    <li><strong>Fila 26</strong>: cable <strong>negro</strong> de la sonda + cable corto a la columna 1 (GND). (El negro también puede ir directo al carril, como en el dibujo — es lo mismo.)</li>
+    <li><strong>Fila 26</strong>: cable desde el pin <code>3V3</code> de la placa + cable <strong>rojo</strong> de la sonda + una pata de cada resistencia (las dos).</li>
+    <li><strong>Fila 27</strong>: cable de <strong>datos</strong> de la sonda + las otras dos patas de las resistencias + cable verde a <code>GPIO4</code>.</li>
+    <li><strong>Fila 28</strong>: cable <strong>negro</strong> de la sonda + cable corto a la columna 1 (GND). (El negro también puede ir directo al carril, como en el dibujo — es lo mismo.)</li>
   </ul>
 
-  <h3>Así se ve sobre la protoboard (filas 24–26)</h3>
+  <h3>Así se ve sobre la protoboard (filas 26–28)</h3>
   <div class="diagram">
     <svg viewBox="0 0 720 250" role="img" aria-label="Zoom del DS18B20 sobre la protoboard">
-      <text x="360" y="18" class="lbl2" text-anchor="middle">Protoboard · filas 24–26 · mitad izquierda (el carril de 5 V no se usa aquí)</text>
+      <text x="360" y="18" class="lbl2" text-anchor="middle">Protoboard · filas 26–28 · mitad izquierda (el carril de 5 V no se usa aquí)</text>
       <!-- carriles -->
       <rect x="238" y="45" width="24" height="180" rx="6" fill="none" stroke="var(--w-gnd)" stroke-width="1.8"/>
       <text x="250" y="242" class="lbl2" text-anchor="middle">col 1 · GND</text>
@@ -585,9 +585,9 @@
       <rect x="286" y="58" width="212" height="24" rx="6" fill="var(--code-bg)"/>
       <rect x="286" y="118" width="212" height="24" rx="6" fill="var(--code-bg)"/>
       <rect x="286" y="178" width="212" height="24" rx="6" fill="var(--code-bg)"/>
-      <text x="228" y="74" class="lbl2" text-anchor="end">f.24</text>
-      <text x="228" y="134" class="lbl2" text-anchor="end">f.25</text>
-      <text x="228" y="194" class="lbl2" text-anchor="end">f.26</text>
+      <text x="228" y="74" class="lbl2" text-anchor="end">f.26</text>
+      <text x="228" y="134" class="lbl2" text-anchor="end">f.27</text>
+      <text x="228" y="194" class="lbl2" text-anchor="end">f.28</text>
       <!-- agujeros -->
       <g fill="var(--text-muted)">
         <circle cx="250" cy="70" r="3.5"/><circle cx="250" cy="130" r="3.5"/><circle cx="250" cy="190" r="3.5"/>
@@ -606,11 +606,11 @@
       <text x="85" y="194" class="lbl2" text-anchor="end">negro</text>
       <path d="M90 190 H250" class="wire" stroke="var(--w-gnd)"/>
       <circle cx="250" cy="190" r="4" fill="var(--w-gnd)" class="dot"/>
-      <!-- dupont 3V3 a f.24 -->
+      <!-- dupont 3V3 a f.26 -->
       <path d="M690 70 H480" class="wire" stroke="var(--w-3v3)"/>
       <circle cx="480" cy="70" r="4" fill="var(--w-3v3)" class="dot"/>
       <text x="600" y="62" class="lbl2" text-anchor="middle">← pin 3V3 de la placa</text>
-      <!-- dos resistencias en paralelo entre f.24 y f.25 -->
+      <!-- dos resistencias en paralelo entre f.26 y f.27 -->
       <path d="M345 70 V80" class="wire" stroke="var(--w-sig)" stroke-width="1.8"/>
       <rect x="337" y="80" width="16" height="40" rx="3" class="res"/>
       <path d="M345 120 V130" class="wire" stroke="var(--w-sig)" stroke-width="1.8"/>
@@ -763,22 +763,22 @@
       <text x="340" y="104" class="lbl2" text-anchor="middle">filas 1–3</text>
       <text x="340" y="119" class="lbl2" text-anchor="middle">divisor ppal ALTO</text>
       <rect x="282" y="158" width="116" height="44" rx="6" fill="var(--code-bg)"/>
-      <text x="340" y="176" class="lbl2" text-anchor="middle">filas 5–7</text>
+      <text x="340" y="176" class="lbl2" text-anchor="middle">filas 6–8</text>
       <text x="340" y="191" class="lbl2" text-anchor="middle">divisor ppal BAJO</text>
       <rect x="282" y="230" width="116" height="44" rx="6" fill="var(--code-bg)"/>
-      <text x="340" y="248" class="lbl2" text-anchor="middle">filas 9–11</text>
+      <text x="340" y="248" class="lbl2" text-anchor="middle">filas 11–13</text>
       <text x="340" y="263" class="lbl2" text-anchor="middle">divisor aux M-ALTO</text>
       <rect x="282" y="302" width="116" height="44" rx="6" fill="var(--code-bg)"/>
-      <text x="340" y="320" class="lbl2" text-anchor="middle">filas 13–15</text>
+      <text x="340" y="320" class="lbl2" text-anchor="middle">filas 16–18</text>
       <text x="340" y="335" class="lbl2" text-anchor="middle">divisor aux MEDIO</text>
       <rect x="282" y="374" width="116" height="44" rx="6" fill="var(--code-bg)"/>
-      <text x="340" y="392" class="lbl2" text-anchor="middle">filas 17–19</text>
+      <text x="340" y="392" class="lbl2" text-anchor="middle">filas 21–23</text>
       <text x="340" y="407" class="lbl2" text-anchor="middle">divisor aux BAJO</text>
-      <text x="340" y="442" class="lbl2" text-anchor="middle" opacity="0.6">filas 20–23 libres</text>
+      <text x="340" y="442" class="lbl2" text-anchor="middle" opacity="0.6">filas 24–25 libres</text>
       <rect x="282" y="458" width="116" height="44" rx="6" fill="var(--code-bg)"/>
-      <text x="340" y="476" class="lbl2" text-anchor="middle">filas 24–26</text>
+      <text x="340" y="476" class="lbl2" text-anchor="middle">filas 26–28</text>
       <text x="340" y="491" class="lbl2" text-anchor="middle">DS18B20 + pull-up</text>
-      <text x="340" y="540" class="lbl2" text-anchor="middle" opacity="0.6">filas 27–60 libres</text>
+      <text x="340" y="540" class="lbl2" text-anchor="middle" opacity="0.6">filas 29–60 libres</text>
 
       <!-- ======== sensores (izquierda) ======== -->
       <rect x="15" y="80" width="130" height="56" rx="8" class="comp"/>
@@ -958,13 +958,13 @@
       <tr><td>XKC-Y25 ×5 · azul</td><td>Columna 1 (GND)</td><td>directo al carril</td></tr>
       <tr><td>XKC-Y25 ×5 · negro (modo)</td><td>— (aislado con cinta)</td><td>—</td></tr>
       <tr><td>XKC-Y25 · amarillo (ppal alto)</td><td><code>GPIO32</code></td><td>divisor 3×10k, filas 1–3</td></tr>
-      <tr><td>XKC-Y25 · amarillo (ppal bajo)</td><td><code>GPIO33</code></td><td>divisor 3×10k, filas 5–7</td></tr>
-      <tr><td>XKC-Y25 · amarillo (aux medio-alto)</td><td><code>GPIO34</code></td><td>divisor 3×10k, filas 9–11</td></tr>
-      <tr><td>XKC-Y25 · amarillo (aux medio)</td><td><code>GPIO36</code> / VP</td><td>divisor 3×10k, filas 13–15</td></tr>
-      <tr><td>XKC-Y25 · amarillo (aux bajo)</td><td><code>GPIO39</code> / VN</td><td>divisor 3×10k, filas 17–19</td></tr>
-      <tr><td>DS18B20 · rojo</td><td>Placa · pin <code>3V3</code></td><td>fila 24</td></tr>
-      <tr><td>DS18B20 · datos</td><td><code>GPIO4</code></td><td>fila 25, con 2×10k en paralelo hacia fila 24 (3V3)</td></tr>
-      <tr><td>DS18B20 · negro</td><td>Columna 1 (GND)</td><td>fila 26</td></tr>
+      <tr><td>XKC-Y25 · amarillo (ppal bajo)</td><td><code>GPIO33</code></td><td>divisor 3×10k, filas 6–8</td></tr>
+      <tr><td>XKC-Y25 · amarillo (aux medio-alto)</td><td><code>GPIO34</code></td><td>divisor 3×10k, filas 11–13</td></tr>
+      <tr><td>XKC-Y25 · amarillo (aux medio)</td><td><code>GPIO36</code> / VP</td><td>divisor 3×10k, filas 16–18</td></tr>
+      <tr><td>XKC-Y25 · amarillo (aux bajo)</td><td><code>GPIO39</code> / VN</td><td>divisor 3×10k, filas 21–23</td></tr>
+      <tr><td>DS18B20 · rojo</td><td>Placa · pin <code>3V3</code></td><td>fila 26</td></tr>
+      <tr><td>DS18B20 · datos</td><td><code>GPIO4</code></td><td>fila 27, con 2×10k en paralelo hacia fila 26 (3V3)</td></tr>
+      <tr><td>DS18B20 · negro</td><td>Columna 1 (GND)</td><td>fila 28</td></tr>
       <tr><td>TDS · VCC (+)</td><td><code>GPIO25</code></td><td>dupont directo</td></tr>
       <tr><td>TDS · A (analógica)</td><td><code>GPIO35</code></td><td>dupont directo</td></tr>
       <tr><td>TDS · GND (−)</td><td>Columna 1 (GND)</td><td>dupont directo</td></tr>
@@ -1107,7 +1107,7 @@ void loop() {
       <tr>
         <td>Temperatura</td>
         <td>Valor razonable (ambiente, ~18–30 °C); metiendo la sonda en agua tibia debe subir</td>
-        <td><code>-127.0</code> = no comunica: revisa filas 24–26, el pull-up de 2×10k y que el rojo esté en 3V3</td>
+        <td><code>-127.0</code> = no comunica: revisa filas 26–28, el pull-up de 2×10k y que el rojo esté en 3V3</td>
       </tr>
       <tr>
         <td>TDS con la sonda en un vaso de agua</td>
