@@ -48,6 +48,8 @@
 
 // ================================ TIEMPOS =================================
 #define SEND_INTERVAL_MS      60000UL    // envío al backend: cada 60 s
+#define MIN_ENVIO_GAP_MS      15000UL    // red de seguridad: separación mínima entre POST
+                                         // AUNQUE haya cambios de estado, para no saturar Sheets
 #define PUMP_TIMEOUT_MS       300000UL   // seguridad: máx. 5 min de bomba seguidos
 #define PUMP_MIN_OFF_MS       30000UL    // reposo mínimo entre arranques (anti-ciclado)
 #define LEVEL_SAMPLES         5          // muestras por sensor de nivel (voto por mayoría)

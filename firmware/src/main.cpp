@@ -335,10 +335,22 @@ void loop() {
   Niveles n = leerNiveles();
   controlBomba(n);
 
+  // La cadencia se mide por el INTENTO de envío, no por el éxito. Con Apps Script
+  // el POST puede ESCRIBIR la fila en Sheets y aun así devolver un código que no
+  // es 2xx (redirección 302 o lectura cortada) -> enviarDatos() da false. Si el
+  // reloj dependiera del éxito, no avanzaría nunca y se enviaría en cada vuelta
+  // (era justo el bug de los POST cada ~10 s). Por eso avanzamos el reloj SIEMPRE
+  // que se intenta, y un evento se da por atendido con un único intento.
+  static unsigned long ultimoIntentoMs = 0;
   unsigned long ahora = millis();
-  bool tocaEnviar = envioInmediato || (ahora - ultimoEnvioMs >= SEND_INTERVAL_MS) || ultimoEnvioMs == 0;
+  bool primerEnvio  = (ultimoIntentoMs == 0);
+  bool porIntervalo = primerEnvio || (ahora - ultimoIntentoMs >= SEND_INTERVAL_MS);
+  bool porEvento    = envioInmediato && (primerEnvio || ahora - ultimoIntentoMs >= MIN_ENVIO_GAP_MS);
 
-  if (tocaEnviar) {
+  if (porIntervalo || porEvento) {
+    ultimoIntentoMs = ahora;
+    envioInmediato = false;     // el evento queda atendido con este intento
+
     ultimaTempC = leerTemperatura();
     leerTdsEc(ultimaTempC, ultimoEc, ultimoTds);
 
@@ -346,15 +358,7 @@ void loop() {
                   n.ppalAlto, n.ppalBajo, n.auxAlto, n.auxMedio, n.auxBajo,
                   ultimaTempC, ultimoEc, ultimoTds, bombaOn, alertaTexto());
 
-    if (enviarDatos(n)) {
-      ultimoEnvioMs = ahora;
-      envioInmediato = false;
-    } else if (envioInmediato) {
-      // No bloquear el control de bomba reintentando en bucle: se reintenta
-      // en el siguiente ciclo normal
-      envioInmediato = false;
-      ultimoEnvioMs = ahora;
-    }
+    if (enviarDatos(n)) ultimoEnvioMs = ahora;   // informativo: última vez con POST OK
   }
 
   // Ciclo de control corto para reaccionar rápido a los niveles;
