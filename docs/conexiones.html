@@ -671,7 +671,167 @@
 <!-- ============================================================ RELE -->
 <section id="rele">
   <h2><span class="num">7</span>Relé, bomba y diodo de protección</h2>
-  <p>El módulo de relé tiene dos zonas: los <strong>3 pines de control</strong> (VCC, GND, IN — van al ESP32) y el <strong>bornero de contactos</strong> (COM, NO, NC — por ahí pasa el 12 V de la bomba). Son circuitos separados: el 12 V no toca el lado de control.</p>
+  <p>El módulo de relé tiene dos zonas: los <strong>3 pines de control</strong> (VCC, GND, IN) y el <strong>bornero de contactos</strong> (COM, NO, NC — por ahí pasa el 12 V de la bomba). Son circuitos separados: el 12 V no toca el lado de control. <strong>Importante:</strong> con este módulo el lado de control <strong>no va directo al ESP32</strong>, sino a través de un <strong>MOSFET</strong> (apartado siguiente).</p>
+
+  <div class="warn">
+    <svg class="ic" viewBox="0 0 24 24"><path d="M12 4 21 19H3L12 4Z"/><path d="M12 10v4.5"/><circle cx="12" cy="16.8" r="0.5" fill="currentColor" stroke="none"/></svg>
+    <div><strong>Tu módulo de relé necesita un MOSFET (comprobado en el montaje real)</strong><br>
+    Al probarlo vimos que este módulo interpreta <strong>3,3 V como "activado"</strong>: solo se apaga cuando su pin <code>IN</code> está cerca de <strong>5 V</strong>. Como el ESP32 solo entrega 3,3 V, si conectas <code>IN</code> directo a un GPIO el relé se queda <strong>encendido siempre</strong> y no conmuta. La solución es un <strong>MOSFET de canal P (FQP27P06)</strong> que <strong>da o corta la alimentación de todo el módulo</strong>: con <code>IN</code> fijo a GND, el relé cierra cuando el MOSFET deja pasar los 5 V y abre cuando los corta. El GPIO manda sobre la <strong>puerta del MOSFET</strong>, no sobre <code>IN</code>.</div>
+  </div>
+
+  <h3>Driver con MOSFET · esquema</h3>
+  <div class="legend">
+    <span><i style="background:var(--w-5v)"></i>5 V</span>
+    <span><i style="background:var(--w-3v3)"></i>3,3 V</span>
+    <span><i style="background:var(--w-gnd)"></i>GND</span>
+    <span><i style="background:var(--w-gpio)"></i>señal GPIO</span>
+  </div>
+  <div class="diagram">
+    <svg viewBox="0 0 720 300" role="img" aria-label="Driver del relé con MOSFET de canal P FQP27P06">
+      <!-- rail 5V arriba -->
+      <path d="M70 45 H600" class="wire" stroke="var(--w-5v)"/>
+      <text x="608" y="49" class="lbl2">5 V</text>
+      <!-- rail GND abajo -->
+      <path d="M70 262 H660" class="wire" stroke="var(--w-gnd)"/>
+      <text x="70" y="283" class="lbl2">GND común (ESP32 y módulo)</text>
+      <!-- ESP32 -->
+      <rect x="20" y="95" width="110" height="110" rx="8" class="comp"/>
+      <text x="75" y="122" class="lbl" text-anchor="middle">Placa ESP32</text>
+      <text x="75" y="138" class="lbl2" text-anchor="middle">(extensión)</text>
+      <text x="126" y="164" class="lbl2" text-anchor="end">3V3</text>
+      <text x="126" y="193" class="lbl2" text-anchor="end">GPIO26</text>
+      <path d="M75 95 V45" class="wire" stroke="var(--w-5v)"/>
+      <circle cx="75" cy="45" r="3.5" fill="var(--w-5v)" class="dot"/>
+      <path d="M75 205 V262" class="wire" stroke="var(--w-gnd)"/>
+      <circle cx="75" cy="262" r="3.5" fill="var(--w-gnd)" class="dot"/>
+      <!-- MOSFET -->
+      <rect x="300" y="110" width="110" height="90" rx="8" class="comp"/>
+      <text x="355" y="142" class="lbl" text-anchor="middle">FQP27P06</text>
+      <text x="355" y="158" class="lbl2" text-anchor="middle">MOSFET canal P</text>
+      <text x="355" y="103" class="lbl2" text-anchor="middle">S</text>
+      <text x="293" y="160" class="lbl2" text-anchor="end">G</text>
+      <text x="417" y="160" class="lbl2">D</text>
+      <!-- Source arriba a 5V -->
+      <path d="M355 110 V45" class="wire" stroke="var(--w-5v)"/>
+      <circle cx="355" cy="45" r="3.5" fill="var(--w-5v)" class="dot"/>
+      <!-- Gate: nodo con GPIO26 y 10k a 3V3 -->
+      <path d="M130 189 H250 V165 H300" class="wire" stroke="var(--w-gpio)"/>
+      <circle cx="250" cy="165" r="4" fill="var(--w-gpio)" class="dot"/>
+      <text x="160" y="183" class="lbl2">GPIO26 → puerta</text>
+      <!-- 10k de 3V3 al nodo de puerta -->
+      <path d="M130 160 H208" class="wire" stroke="var(--w-3v3)"/>
+      <rect x="208" y="152" width="24" height="16" rx="3" class="res"/>
+      <path d="M232 160 H250 V165" class="wire" stroke="var(--w-3v3)"/>
+      <text x="210" y="146" class="lbl2">10k</text>
+      <!-- Drain a VCC del modulo -->
+      <path d="M410 165 H470 V152 H545" class="wire" stroke="var(--w-5v)"/>
+      <text x="452" y="145" class="lbl2">5 V conmutada</text>
+      <!-- Modulo rele -->
+      <rect x="545" y="110" width="150" height="120" rx="8" class="comp"/>
+      <text x="620" y="135" class="lbl" text-anchor="middle">Módulo relé</text>
+      <text x="552" y="156" class="lbl2">VCC</text>
+      <text x="552" y="186" class="lbl2">GND</text>
+      <text x="552" y="213" class="lbl2">IN</text>
+      <text x="688" y="198" class="lbl2" text-anchor="end">COM·NO·NC</text>
+      <text x="688" y="213" class="lbl2" text-anchor="end">→ bomba (abajo)</text>
+      <!-- modulo GND -->
+      <path d="M545 182 H525 V262" class="wire" stroke="var(--w-gnd)"/>
+      <circle cx="525" cy="262" r="3.5" fill="var(--w-gnd)" class="dot"/>
+      <!-- modulo IN a GND -->
+      <path d="M545 209 H505 V262" class="wire" stroke="var(--w-gnd)"/>
+      <circle cx="505" cy="262" r="3.5" fill="var(--w-gnd)" class="dot"/>
+      <text x="468" y="204" class="lbl2" text-anchor="end">IN → GND</text>
+    </svg>
+  </div>
+
+  <h3>Patillaje del FQP27P06</h3>
+  <p>Míralo <strong>de frente</strong> (cara con la serigrafía hacia ti, patas hacia abajo). La lengüeta metálica es el <strong>Drenador</strong>. De izquierda a derecha: <strong>1 = Puerta (G)</strong> · <strong>2 = Drenador (D)</strong> · <strong>3 = Fuente (S)</strong>.</p>
+
+  <h3>Cómo pinchar el MOSFET en la protoboard</h3>
+  <p>El MOSFET tiene 3 patas y cada una va en su <strong>fila</strong> de la protoboard (cada fila es un nodo distinto, así que no puede haber dos patas en la misma fila). Usa <strong>tres filas seguidas</strong> —por ejemplo <strong>31 · 32 · 33</strong>— y una fila libre justo encima (30) para el enganche de 3,3 V:</p>
+  <div class="diagram">
+    <svg viewBox="0 0 720 300" role="img" aria-label="Colocación del MOSFET FQP27P06 sobre la protoboard">
+      <text x="360" y="18" class="lbl2" text-anchor="middle">El MOSFET ocupa 3 filas seguidas · una pata por fila</text>
+      <!-- rails -->
+      <rect x="575" y="45" width="20" height="215" rx="6" fill="none" stroke="var(--w-5v)" stroke-width="1.8"/>
+      <text x="585" y="277" class="lbl2" text-anchor="middle">carril 5 V</text>
+      <rect x="635" y="45" width="20" height="215" rx="6" fill="none" stroke="var(--w-gnd)" stroke-width="1.8"/>
+      <text x="645" y="277" class="lbl2" text-anchor="middle">carril GND</text>
+      <!-- bandas de fila -->
+      <rect x="250" y="55" width="210" height="22" rx="6" fill="var(--code-bg)"/>
+      <rect x="250" y="110" width="210" height="22" rx="6" fill="var(--code-bg)"/>
+      <rect x="250" y="165" width="210" height="22" rx="6" fill="var(--code-bg)"/>
+      <rect x="250" y="220" width="210" height="22" rx="6" fill="var(--code-bg)"/>
+      <text x="242" y="70" class="lbl2" text-anchor="end">f.30</text>
+      <text x="242" y="125" class="lbl2" text-anchor="end">f.31 · G</text>
+      <text x="242" y="180" class="lbl2" text-anchor="end">f.32 · D</text>
+      <text x="242" y="235" class="lbl2" text-anchor="end">f.33 · S</text>
+      <!-- agujeros -->
+      <g fill="var(--text-muted)">
+        <circle cx="270" cy="66" r="3.2"/><circle cx="310" cy="66" r="3.2"/><circle cx="350" cy="66" r="3.2"/><circle cx="390" cy="66" r="3.2"/><circle cx="430" cy="66" r="3.2"/>
+        <circle cx="270" cy="121" r="3.2"/><circle cx="310" cy="121" r="3.2"/><circle cx="350" cy="121" r="3.2"/><circle cx="390" cy="121" r="3.2"/><circle cx="430" cy="121" r="3.2"/>
+        <circle cx="270" cy="176" r="3.2"/><circle cx="310" cy="176" r="3.2"/><circle cx="350" cy="176" r="3.2"/><circle cx="390" cy="176" r="3.2"/><circle cx="430" cy="176" r="3.2"/>
+        <circle cx="270" cy="231" r="3.2"/><circle cx="310" cy="231" r="3.2"/><circle cx="350" cy="231" r="3.2"/><circle cx="390" cy="231" r="3.2"/><circle cx="430" cy="231" r="3.2"/>
+        <circle cx="585" cy="231" r="3.2"/>
+      </g>
+      <!-- cuerpo TO-220 con 3 patas -->
+      <rect x="70" y="108" width="70" height="140" rx="6" class="comp"/>
+      <text x="105" y="99" class="lbl2" text-anchor="middle">FQP27P06</text>
+      <text x="105" y="182" class="lbl2" text-anchor="middle">canal P</text>
+      <path d="M140 121 H270" class="wire" stroke="var(--text-primary)" stroke-width="1.6"/>
+      <path d="M140 176 H270" class="wire" stroke="var(--text-primary)" stroke-width="1.6"/>
+      <path d="M140 231 H270" class="wire" stroke="var(--text-primary)" stroke-width="1.6"/>
+      <text x="150" y="115" class="lbl2">G</text>
+      <text x="150" y="170" class="lbl2">D</text>
+      <text x="150" y="225" class="lbl2">S</text>
+      <circle cx="270" cy="121" r="4" fill="var(--text-primary)" class="dot"/>
+      <circle cx="270" cy="176" r="4" fill="var(--text-primary)" class="dot"/>
+      <circle cx="270" cy="231" r="4" fill="var(--text-primary)" class="dot"/>
+      <!-- 10k entre f.31 (G) y f.30 (3V3) -->
+      <path d="M350 121 V100" class="wire" stroke="var(--w-3v3)" stroke-width="1.8"/>
+      <rect x="342" y="84" width="16" height="16" rx="3" class="res"/>
+      <path d="M350 84 V66" class="wire" stroke="var(--w-3v3)" stroke-width="1.8"/>
+      <circle cx="350" cy="121" r="4" fill="var(--w-3v3)" class="dot"/>
+      <circle cx="350" cy="66" r="4" fill="var(--w-3v3)" class="dot"/>
+      <text x="366" y="96" class="lbl2">10k</text>
+      <!-- 3V3 dupont a f.30 -->
+      <path d="M430 66 H520" class="wire" stroke="var(--w-3v3)"/>
+      <circle cx="430" cy="66" r="4" fill="var(--w-3v3)" class="dot"/>
+      <text x="525" y="70" class="lbl2">→ 3V3 ESP32</text>
+      <!-- GPIO26 dupont a f.31 (G) -->
+      <path d="M430 121 H520" class="wire" stroke="var(--w-gpio)"/>
+      <circle cx="430" cy="121" r="4" fill="var(--w-gpio)" class="dot"/>
+      <text x="525" y="125" class="lbl2">→ GPIO26</text>
+      <!-- Drain f.32 a VCC del modulo -->
+      <path d="M430 176 H520" class="wire" stroke="var(--w-5v)"/>
+      <circle cx="430" cy="176" r="4" fill="var(--w-5v)" class="dot"/>
+      <text x="525" y="180" class="lbl2">→ VCC relé</text>
+      <!-- Source f.33 al carril 5V -->
+      <path d="M430 231 H585" class="wire" stroke="var(--w-5v)"/>
+      <circle cx="430" cy="231" r="4" fill="var(--w-5v)" class="dot"/>
+      <circle cx="585" cy="231" r="4" fill="var(--w-5v)" class="dot"/>
+      <!-- IN y GND del modulo al carril GND -->
+      <path d="M505 150 H645" class="wire" stroke="var(--w-gnd)"/>
+      <circle cx="645" cy="150" r="4" fill="var(--w-gnd)" class="dot"/>
+      <text x="500" y="154" class="lbl2" text-anchor="end">IN y GND del relé</text>
+    </svg>
+  </div>
+  <ul>
+    <li><strong>Identifica las patas</strong> con el MOSFET de frente: izquierda = <strong>Puerta (G)</strong>, centro = <strong>Drenador (D)</strong>, derecha = <strong>Fuente (S)</strong>.</li>
+    <li><strong>Clava las 3 patas en 3 filas seguidas</strong>: G en la 31, D en la 32, S en la 33. Comprueba que ninguna pata comparte fila con otra.</li>
+    <li><strong>Fuente (S, f.33) → carril 5 V</strong>: un dupont de la fila de S al carril de 5 V.</li>
+    <li><strong>Drenador (D, f.32) → <code>VCC</code> del módulo relé</strong>: un dupont de la fila de D al pin <code>VCC</code>. Ojo: el relé <strong>ya no</strong> se alimenta directo de 5 V, lo recibe por aquí.</li>
+    <li><strong>Puerta (G, f.31) → <code>D26</code></strong>: un dupont de la fila de G al pin <code>D26</code> (GPIO26) del ESP32.</li>
+    <li><strong>Resistencia de 10 kΩ de la fila de G a 3,3 V</strong>: una pata en la fila de G (f.31) y la otra en la fila libre de encima (f.30); de esa fila, un dupont al pin <code>3V3</code> del ESP32. Es la que deja la bomba <strong>apagada al arrancar</strong>.</li>
+    <li><strong>Módulo relé:</strong> <code>IN</code> → carril GND y <code>GND</code> → carril GND. El <code>IN</code> se queda fijo a masa; ya no va a ningún GPIO.</li>
+    <li>Los contactos <code>COM/NO/NC</code> y la bomba se cablean igual que abajo en esta sección.</li>
+  </ul>
+  <div class="okbox">
+    <svg class="ic" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg>
+    <div><strong>No hay que cambiar el firmware.</strong> Con este montaje el conjunto sigue siendo "activo a nivel bajo", así que <code>config.h</code> se queda igual (<code>RELE_ACTIVO_BAJO 1</code>, <code>PIN_RELE 26</code>) y se usa el <strong>sketch de prueba original</strong> (donde <code>LOW</code> = encender). Al arrancar el ESP32, el MOSFET queda cortado y la bomba <strong>parada</strong> por defecto.</div>
+  </div>
+
+  <h3>Esquema del relé, la bomba y el diodo (lado de contactos)</h3>
   <div class="legend">
     <span><i style="background:var(--w-5v)"></i>5 V</span>
     <span><i style="background:var(--w-gnd)"></i>GND</span>
@@ -695,11 +855,11 @@
       <text x="415" y="142" class="lbl2">NC (no usar)</text>
       <!-- control -->
       <path d="M145 75 H300" class="wire" stroke="var(--w-5v)"/>
-      <text x="180" y="69" class="lbl2">5 V</text>
+      <text x="180" y="69" class="lbl2">5 V (vía MOSFET)</text>
       <path d="M145 105 H300" class="wire" stroke="var(--w-gnd)"/>
       <text x="180" y="99" class="lbl2">GND</text>
-      <path d="M145 135 H300" class="wire" stroke="var(--w-gpio)"/>
-      <text x="180" y="129" class="lbl2">GPIO26</text>
+      <path d="M145 135 H300" class="wire" stroke="var(--w-gnd)"/>
+      <text x="180" y="129" class="lbl2">IN → GND</text>
       <!-- 12V -->
       <path d="M540 20 V75 H445" class="wire" stroke="var(--w-12v)"/>
       <text x="548" y="30" class="lbl2">+12 V (tras el fusible)</text>
@@ -724,7 +884,7 @@
     </svg>
   </div>
   <ul>
-    <li><strong>Control</strong> (dupont, sin protoboard): <code>VCC</code> → pin 5V de la placa (o carril 5 V), <code>GND</code> → GND, <code>IN</code> → <code>GPIO26</code>.</li>
+    <li><strong>Control</strong> (a través del MOSFET, ver el apartado del driver más arriba): <code>VCC</code> del relé ← <strong>Drenador del MOSFET</strong> (ya no va directo a 5 V), <code>GND</code> → GND, <code>IN</code> → <strong>GND</strong>. Quien manda es <code>GPIO26</code> sobre la <strong>puerta del MOSFET</strong>, no sobre <code>IN</code>.</li>
     <li><strong>Contactos</strong> (cable un poco más grueso si puedes, atornillado al bornero): el <strong>+12 V</strong> (después del fusible) entra en <code>COM</code>; de <code>NO</code> sale al <strong>positivo de la bomba</strong>; el <strong>negativo de la bomba</strong> vuelve directo al negativo de la fuente. <code>NC</code> se queda vacío.</li>
     <li><strong>Diodo HER208 — dónde va físicamente</strong>: <strong>soldado directamente a las dos patillas/terminales de la bomba</strong> (o a los tornillos <code>NO</code> y <code>−</code> justo donde salen los cables de la bomba), <strong>nunca en la protoboard</strong>. Motivos: por ahí pasan los 12 V y el pico de corriente del motor (amperios), muy por encima de lo que aguantan la protoboard y los dupont; y el diodo protege mejor cuanto más pegado esté a la bomba.
       <ul>
@@ -738,7 +898,7 @@
   </ul>
   <div class="infobox">
     <svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 11v5"/><circle cx="12" cy="8" r="0.5" fill="currentColor" stroke="none"/></svg>
-    <div>La mayoría de estos módulos son "activos a nivel bajo" (el relé cierra cuando IN se pone a 0). El firmware ya lo asume (<code>RELE_ACTIVO_BAJO 1</code>). Si al probar ves el comportamiento invertido (bomba en marcha cuando debería estar parada), cambia ese valor a <code>0</code> y recarga.</div>
+    <div>Con el MOSFET, el conjunto sigue siendo "activo a nivel bajo" (<code>GPIO26</code> en <code>LOW</code> → relé cerrado), que es justo lo que asume el firmware (<code>RELE_ACTIVO_BAJO 1</code>): <strong>no hay que tocarlo</strong>. Al arrancar el ESP32 la puerta queda en 3,3 V, el MOSFET cortado y la bomba <strong>parada</strong> por defecto.</div>
   </div>
 
   <div class="warn">
@@ -903,12 +1063,22 @@
       <text x="712" y="754" class="lbl2" text-anchor="end">COM</text>
       <text x="712" y="784" class="lbl2" text-anchor="end">NO</text>
       <text x="712" y="812" class="lbl2" text-anchor="end">NC ·  no usar</text>
-      <!-- IN -->
-      <path d="M700 720 V700 H748 V560" class="wire" stroke="var(--w-gpio)"/>
-      <!-- VCC -->
-      <path d="M560 745 H460 V700 H415" class="wire" stroke="var(--w-5v)"/>
-      <circle cx="415" cy="700" r="4" fill="var(--w-5v)" class="dot"/>
-      <text x="452" y="738" class="lbl2" text-anchor="end">VCC → carril 5 V</text>
+      <!-- driver MOSFET (detalle completo en el apartado del relé) -->
+      <rect x="438" y="678" width="64" height="46" rx="6" class="comp"/>
+      <text x="470" y="699" class="lbl2" text-anchor="middle">MOSFET</text>
+      <text x="470" y="713" class="lbl2" text-anchor="middle">canal P</text>
+      <!-- Gate ← GPIO26 (+10k a 3V3) -->
+      <path d="M748 560 V620 H470 V678" class="wire" stroke="var(--w-gpio)"/>
+      <text x="600" y="614" class="lbl2" text-anchor="middle">GPIO26 → puerta (+10k a 3V3)</text>
+      <!-- Source → carril 5 V -->
+      <path d="M438 701 H415" class="wire" stroke="var(--w-5v)"/>
+      <circle cx="415" cy="701" r="4" fill="var(--w-5v)" class="dot"/>
+      <!-- Drain → VCC relé -->
+      <path d="M488 724 V745 H560" class="wire" stroke="var(--w-5v)"/>
+      <text x="512" y="738" class="lbl2" text-anchor="end">VCC ← MOSFET</text>
+      <!-- IN → GND -->
+      <path d="M700 720 V710 H505 V767 H497" class="wire" stroke="var(--w-gnd)"/>
+      <text x="700" y="712" class="lbl2" text-anchor="end">IN → GND</text>
       <!-- GND rele -->
       <path d="M560 765 H497" class="wire" stroke="var(--w-gnd)"/>
       <circle cx="497" cy="765" r="4" fill="var(--w-gnd)" class="dot"/>
@@ -984,7 +1154,7 @@
       <tr><td>TDS · VCC (+)</td><td><code>GPIO25</code></td><td>dupont directo</td></tr>
       <tr><td>TDS · A (analógica)</td><td><code>GPIO35</code></td><td>dupont directo</td></tr>
       <tr><td>TDS · GND (−)</td><td>Columna 1 (GND)</td><td>dupont directo</td></tr>
-      <tr><td>Relé · VCC / GND / IN</td><td>5 V / GND / <code>GPIO26</code></td><td>dupont directo</td></tr>
+      <tr><td>MOSFET FQP27P06 + relé</td><td>S→5 V, D→<code>VCC</code> relé, G→<code>GPIO26</code> (+10k a 3V3); <code>IN</code> relé→GND</td><td>MOSFET en 3 filas</td></tr>
       <tr><td>Fuente 12 V +</td><td>fusible → jack de la placa <em>y</em> relé <code>COM</code></td><td>cable 12 V</td></tr>
       <tr><td>Relé <code>NO</code></td><td>Bomba +</td><td>cable 12 V, con HER208 en paralelo a la bomba (banda al +)</td></tr>
       <tr><td>Bomba −</td><td>Fuente 12 V −</td><td>cable</td></tr>
@@ -1133,7 +1303,7 @@ void loop() {
       <tr>
         <td>Escribir <code>b</code> (sin 12 V conectado)</td>
         <td>Clic audible del relé y su LED cambia</td>
-        <td>Nada: revisa VCC/GND/IN del relé. Invertido (clic al arrancar): cambia <code>RELE_ACTIVO_BAJO</code> a <code>0</code></td>
+        <td>Nada: revisa el MOSFET (S→5 V, D→<code>VCC</code> relé, G→<code>GPIO26</code>, 10k a 3V3) y que el <code>IN</code> del relé esté a GND</td>
       </tr>
       <tr>
         <td>Prueba final con 12 V (bomba en agua o en seco &lt;5 s)</td>
