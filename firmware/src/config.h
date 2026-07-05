@@ -52,6 +52,13 @@
 #define PUMP_MIN_OFF_MS       30000UL    // reposo mínimo entre arranques (anti-ciclado)
 #define LEVEL_SAMPLES         5          // muestras por sensor de nivel (voto por mayoría)
 #define LEVEL_SAMPLE_GAP_MS   10
+
+// Confirmación anti-falsos-positivos. Cada vuelta del loop dura ~1 s (incluye el
+// muestreo de niveles), así que una condición debe MANTENERSE varias vueltas
+// seguidas antes de actuar: evita reaccionar a olas, salpicaduras o ruido puntual
+// del sensor, y evita el spam de POST por alertas que parpadean.
+#define ARRANQUE_CONFIRMACIONES 3        // vueltas seguidas pidiendo agua antes de ARRANCAR la bomba (~3 s)
+#define CONFIRMAR_CICLOS        3        // vueltas seguidas antes de declarar/limpiar "sensor_fallo" (~3 s)
 #define TDS_WARMUP_MS         500        // estabilización de la sonda tras energizarla
 #define TDS_SAMPLES           15         // muestras ADC (se usa la mediana)
 

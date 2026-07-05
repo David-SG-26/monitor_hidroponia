@@ -98,29 +98,45 @@ static void setAlerta(Alerta a) {
 }
 
 static void controlBomba(const Niveles& n) {
+  // Anti-rebote de la incoherencia: la lectura cruda puede parpadear por ruido.
+  // Solo se declara SENSOR_FALLO tras CONFIRMAR_CICLOS vueltas incoherentes, y
+  // solo se limpia tras CONFIRMAR_CICLOS vueltas coherentes (histéresis). Así el
+  // parpadeo no dispara alertas ni un POST por vuelta.
+  static int cntIncoherente = 0, cntCoherente = 0;
+  static bool falloEstable = false;
+  if (nivelesIncoherentes(n)) { cntIncoherente++; cntCoherente = 0; }
+  else                        { cntCoherente++;  cntIncoherente = 0; }
+  if (cntIncoherente >= CONFIRMAR_CICLOS) falloEstable = true;
+  if (cntCoherente   >= CONFIRMAR_CICLOS) falloEstable = false;
+
+  static int cntArranque = 0; // vueltas seguidas pidiendo arranque
+
   // Modo solo monitorización: el relé nunca se activa. La alerta de sensores
   // incoherentes se mantiene (es información de sensores, no de bomba)
   if (!BOMBA_HABILITADA) {
-    if (nivelesIncoherentes(n)) setAlerta(Alerta::SENSOR_FALLO);
+    if (falloEstable) setAlerta(Alerta::SENSOR_FALLO);
     else if (alertaActiva == Alerta::SENSOR_FALLO) setAlerta(Alerta::NINGUNA);
     setBomba(false);
     return;
   }
 
   // 0) Sensores incoherentes: parar y bloquear hasta que la lectura sea sana
-  if (nivelesIncoherentes(n)) {
+  if (falloEstable) {
     setBomba(false);
     setAlerta(Alerta::SENSOR_FALLO);
+    cntArranque = 0;
     return;
   }
   if (alertaActiva == Alerta::SENSOR_FALLO) setAlerta(Alerta::NINGUNA);
 
-  // 1) Protección marcha en seco: prioridad absoluta sobre todo lo demás
+  // 1) Protección marcha en seco: prioridad absoluta sobre todo lo demás.
+  //    Se actúa de inmediato (sin confirmación): parar rápido siempre es seguro.
   if (!n.auxBajo) {
     if (bombaOn) {
       setBomba(false);
       setAlerta(Alerta::MARCHA_SECO);
     }
+    cntArranque = 0;
     return; // con el auxiliar vacío la bomba jamás arranca
   }
   // Hay agua en el auxiliar: la alerta de marcha en seco deja de aplicar
@@ -151,10 +167,15 @@ static void controlBomba(const Niveles& n) {
     return;
   }
 
-  // 4) Arranque: principal por debajo del nivel bajo, con reposo anti-ciclado
+  // 4) Arranque: principal por debajo del nivel bajo, confirmado durante varias
+  //    vueltas seguidas (anti-falsos-positivos) y con reposo anti-ciclado.
+  if (!n.ppalBajo) cntArranque++;
+  else             cntArranque = 0;
+
   bool reposoOk = (bombaStopMs == 0) || (millis() - bombaStopMs > PUMP_MIN_OFF_MS);
-  if (!n.ppalBajo && reposoOk) {
+  if (cntArranque >= ARRANQUE_CONFIRMACIONES && reposoOk) {
     setBomba(true);
+    cntArranque = 0;
   }
 }
 
